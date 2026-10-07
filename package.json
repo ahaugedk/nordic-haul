@@ -1,0 +1,31 @@
+{
+  "name": "nordic-haul",
+  "version": "1.0.0",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node --import tsx --test tests/*.test.ts",
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "check": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Reference-based Volvo FH16 Aero browser racing prototype",
+  "dependencies": {
+    "@babylonjs/core": "^9.29.0",
+    "@babylonjs/loaders": "^9.29.0",
+    "@dimforge/rapier3d-compat": "^0.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.3"
+  },
+  "type": "module",
+  "private": true
+}

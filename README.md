@@ -1,0 +1,54 @@
+# Nordic Haul — Volvo truck simulator prototype
+
+A local browser game in Danish: configure a reference-based FH16 Aero, choose a contract on the animated Europe map, race two computer-controlled trucks from the cab, earn a payment and continue from the destination city.
+
+## Run
+
+```sh
+npm install
+npm run dev
+```
+
+Open http://127.0.0.1:5173/. `npm test` exercises the career economy, persistent onward travel and a complete race using the actual Rapier WebAssembly world. `npm run build` checks TypeScript and builds the production app.
+
+## Controls
+
+W / Up: throttle; S / Down: brake; A/D or Left/Right: steering; R: return to the road; Escape: pause. Touch controls appear on small screens. Garage exterior: drag to orbit and scroll to zoom. The `Førerhus` button opens an interior inspection camera; drag to look around. `Vis konfiguration` reopens the options while inspecting the cockpit.
+
+The map plays an original generative electronic garage soundtrack and UI sounds after a user gesture; the sound button toggles them. Race engine audio is a separate opt-in control.
+
+## Rendering and models
+
+Babylon.js selects WebGPU when available, with WebGL fallback if initialization fails. Rapier runs in WebAssembly. The main simulation uses a fixed 60 Hz step. Original Blender geometry is delivered as GLB. Static geometry is consolidated by material, configurable modules stay separate, and the renderer adapts resolution when sustained frame rates are low.
+
+The current editable Blender source is `blender/fh16-aero-study.blend`. Export from Blender as **glTF Binary (.glb)** to `public/models/fh16-aero.glb`, with **Include → Visible Objects** enabled. The current scene contains the active geometry only; previous source versions are preserved in `blender/archive/`. Keep material names and the `cab_roof_`, `rear_axle_module`, `steering_assembly`, `mirror_`, `cms_`, `cockpit_temperature_lcd`, and screen prefixes: the game uses these for configuration and animation.
+
+The October 2026 fidelity pass rebuilds the curved cab, windows, grille, optical lights, wheel rims, rear bulkhead, chassis equipment and cockpit controls from the four references in `docs/reference/`. The Blender source includes final manual emblem corrections. `scripts/refine-truck.mjs` reproduces the intermediate geometry as `blender/fh16-aero-generated.glb`; it does not replace the final Blender source or shipping model. The older Python scripts reproduce the previous study only. Pre-refinement sources are preserved in `blender/archive/`.
+
+The cockpit alignment pass follows `docs/reference/volvo-cockpit-wide.png`. The wheel and column share a datum; the instrument display sits behind a shallow hood; the centre stack, door cards and windshield liners meet on shared surfaces. `scripts/align-cockpit.mjs` rebuilds this pass from `blender/archive/fh16-aero-before-cockpit-alignment.glb`, preserving the exterior. Import its GLB into a clean Blender scene before saving subsequent source updates. The original detailed panorama is retained in `docs/reference/volvo-cockpit.png`. The instrument and navigation screens are rendered in 3D and updated by the game. The climate LCD is a separate screen. The inspection camera adapts its field of view to panel width; the driving camera remains at the driver seat. CMS uses two low-resolution camera feeds refreshed periodically to control cost.
+
+## Data and scope
+
+- [Volvo option/source audit](docs/volvo-sources.md)
+- [Price estimates and uncertainty](docs/prices.md)
+- [Europe geography and travel rules](docs/map-data.md)
+
+This is a reference-based development prototype, not Volvo CAD or an OEM-validated configurator. The public FH16 Aero builder displayed a conflicting D13 engine list; the prototype uses Volvo's official D17 specifications. Supported garage options are a verified subset. Paint RGB, some dimensions and driving curves remain approximate. Prices are estimates excluding VAT, not dealer quotations.
+
+All city contracts use a compressed version of the same fictional, 2.1 km Autobahn loop with two 640 m straights and rolling hills up to approximately 7%. The Europe map and persisted arrival city work, but actual intercity 3D road networks, a visible player trailer, live multiplayer and OEM adaptive high-beam behavior are not implemented. Automatic night headlights are implemented.
+
+Lighting assets: Poly Haven Studio Small 09 and Kloppenheim 06 Pure Sky, CC0. Map geometry: Natural Earth, public domain. Music and model geometry are original.
+
+## Arcade visual direction
+
+The racing skin uses locally hosted Barlow fonts, black and signal-yellow menus, a darker pit environment and a condensed italic game wordmark. The race HUD has start cues, live route progress and speed-dependent visual effects. Original procedural electronic music plays in menus; UI, countdown and finish cues respect the sound toggle. Reduced-motion preferences disable decorative motion and camera speed effects.
+
+## Autobahn, cargo and accelerated days
+
+The racing carriageway has three lanes, shoulders, collidable guardrails and a separated opposing carriageway. Terrain, road, cameras and opponent vehicles share the same elevation profile. Buildings (including roof overhangs) and tree canopies must pass a clearance check against **both** carriageways before placement. Portal signs clear the trucks above the roadway.
+
+Every map contract offers 8, 16 or 24 tonnes on the same destination and distance. Cargo adds 1,100 game kroner per tonne to the first-place payment; the normal placement payout and time bonus still apply. The selected weight and payment stay visible in the contract and race HUD. This is game economy, not a freight-rate estimate.
+
+Driving uses the catalog's engine kW and estimated chassis mass plus a generic 6,500 kg empty trailer and payload, simplified power transfer, launch traction, rolling resistance, drag, gravity along the gradient and braking. Two collidable AI trucks use the same equations (600/700 hp and 12/16 t), start ahead in separate lanes, and appear on the minimap. Tyres, suspension, detailed gears and trailer dynamics remain simplified. Rivals now tow original 13.6 m generic freight trailers with triple axles, rear doors, markers and tail lights. Separate kinematic collision bodies and articulated coupling poses follow curves and gradients. Existing Volvo tractor/cockpit geometry remains unchanged.
+
+A full day lasts 24 real seconds: 2.5 days per minute of unpaused race simulation. Sky, sun, ambient light, fog and reflections change with time. Stars, automatic truck headlights, roadside lighting, tail lights and lit windows appear at night. Pause freezes both driving and the day clock.
