@@ -72,7 +72,7 @@ function clearInputs(){for(const k of Object.keys(input) as (keyof Controls)[])i
 function commit(){const c=buyConfiguration(career,draft);if(!c)return false;career=c;saveCareer(career);return true;}
 function goGarage(){sim?.dispose();sim=undefined;mode='garage';draft={...career.truck};chosen=tendersFrom(career.currentCity)[0];view.configure(draft);view.setMode('garage');clearInputs();render();}
 async function startRace(){
-  dispatchAudio.setRacing(true);playUI(()=>dispatchAudio.depart());lastCountdownCue=-1;mode='race';clearInputs();sim?.dispose();sim=new Simulation(career.truck,chosen);accumulator=0;view.setRoute(cityFor(chosen.origin).name,cityFor(chosen.destination).name);view.setMode('race');view.updateRace(sim.snapshot());render();
+  dispatchAudio.setRacing(true);playUI(()=>dispatchAudio.depart());lastCountdownCue=-1;mode='race';clearInputs();sim?.dispose();sim=new Simulation(career.truck,chosen);accumulator=0;view.setRoute(cityFor(chosen.origin).name,cityFor(chosen.destination).name);view.setMode('race');view.updateRace(sim.snapshot());render();updateHUD(sim.snapshot());
   if(dispatchAudio.settings.engine)void unlockAudio().catch(()=>{});
 }
 function pause(){

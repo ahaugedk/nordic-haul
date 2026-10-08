@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import { DEFAULT_CONFIG,TENDERS } from '../src/data/catalog.ts';
 import { CITIES,tendersFrom,withLoad,cargoPremium } from '../src/data/europe.ts';
-import { TRACK,TRACK_LENGTH,TRACK_RX,ROAD_HALF_WIDTH,atDistance,nearestTrack,sceneryClearance } from '../src/game/track.ts';
+import { TRACK,TRACK_LENGTH,TRACK_RX,ROAD_HALF_WIDTH,TERRAIN_SIZE,TERRAIN_SEGMENTS,terrainHeight,atDistance,nearestTrack,sceneryClearance } from '../src/game/track.ts';
 import { accelerationFor } from '../src/game/drivetrain.ts';
 import { DAY_SECONDS,dayCycle } from '../src/game/dayCycle.ts';
 import { Simulation,initPhysics } from '../src/game/simulation.ts';
@@ -32,11 +32,11 @@ test('actual loaded Rapier trucks climb the road and more power compensates for 
   const light=run(8),heavy=run(24),strong=run(24,'D17A780');
   assert.ok(light.progress>heavy.progress+.025);assert.ok(strong.progress>heavy.progress+.015);
 });
-test('highway is closed, has long straights and real rolling hills below eight percent',()=>{
+test('highway is closed with long climbs, over seventy metres of elevation and eleven-percent grades',()=>{
   const start=atDistance(0),end=atDistance(TRACK_LENGTH);assert.ok(Math.hypot(start.x-end.x,start.z-end.z)<.001);
   assert.equal(atDistance(600).x,TRACK_RX);assert.equal(atDistance(30).yaw,atDistance(600).yaw);
-  const heights=TRACK.map(p=>p.y);assert.ok(Math.max(...heights)-Math.min(...heights)>25);
-  assert.ok(Math.max(...TRACK.map(p=>Math.abs(p.grade)))<.08);
+  const heights=TRACK.map(p=>p.y);assert.ok(Math.max(...heights)-Math.min(...heights)>70);
+  assert.ok(Math.max(...TRACK.map(p=>p.grade))>.11);assert.ok(Math.max(...TRACK.map(p=>Math.abs(p.grade)))<.12);
   for(const s of [10,700,1150,1850]){const p=atDistance(s,3.5),n=nearestTrack(p.x,p.z);assert.ok(Math.abs(n.lane-3.5)<.03);assert.ok(Math.abs(n.s-s)<.1);}
 });
 test('guardrails keep a sideways-moving truck inside the road',()=>{
@@ -55,4 +55,29 @@ test('day clock runs 2.5 days per minute with repeated nights and headlights at 
   assert.equal(DAY_SECONDS,24);assert.equal(dayCycle(0).hour,8);assert.equal(dayCycle(12).hour,20);assert.equal(dayCycle(12).night,true);
   assert.equal(dayCycle(24).hour,8);assert.equal(dayCycle(24).day,2);assert.equal(dayCycle(60).day,3);assert.equal(dayCycle(60).hour,20);
   assert.equal(dayCycle(0).night,false);assert.equal(dayCycle(36).night,true);
+});
+
+test('a long eleven-percent climb visibly loses speed under full throttle, and payload/power change the outcome',()=>{
+  const peak=TRACK.reduce((a,b)=>a.grade>b.grade?a:b);
+  const run=(tonnes:number,engine=DEFAULT_CONFIG.engine,s=peak.s,throttle=true)=>{
+    const sim=new Simulation({...DEFAULT_CONFIG,engine},{...TENDERS[0],tonnes});const p=atDistance(s,3.5);sim.countdown=0;
+    sim.body.setTranslation({x:p.x,y:p.y+1.9,z:p.z},true);sim.yaw=p.yaw;sim.speed=20;sim.progress.distance=s;sim.progress.last=s;
+    for(let i=0;i<900;i++)sim.step({throttle,brake:false,left:false,right:false});
+    const result=sim.snapshot();assert.equal(result.offRoad,false);sim.dispose();return result;
+  };
+  const light=run(8),heavy=run(24),strong=run(24,'D17A780'),downhill=run(24,'D17A600',2050,false);
+  assert.ok(heavy.speed<15,'Heavy 600 hp must drop below 54 km/h from 72 km/h even at full throttle');
+  assert.ok(light.speed>heavy.speed+3,'Light cargo must retain at least 11 km/h more speed');
+  assert.ok(strong.speed>heavy.speed+1.5,'780 hp must retain at least 5 km/h more with the same payload');
+  assert.ok(downhill.speed>25,'Gravity must accelerate a coasting truck past 90 km/h downhill');
+});
+test('the rendered countryside remains below both carriageways despite the larger hills',()=>{
+  const cell=TERRAIN_SIZE/TERRAIN_SEGMENTS;
+  const meshHeight=(x:number,z:number)=>{
+    const gx=(x+TERRAIN_SIZE/2)/cell,gz=(z+TERRAIN_SIZE/2)/cell,ix=Math.floor(gx),iz=Math.floor(gz),fx=gx-ix,fz=gz-iz;
+    const px=ix*cell-TERRAIN_SIZE/2,pz=iz*cell-TERRAIN_SIZE/2;
+    const h00=terrainHeight(px,pz),h10=terrainHeight(px+cell,pz),h01=terrainHeight(px,pz+cell),h11=terrainHeight(px+cell,pz+cell);
+    return fx+fz<=1?h00+(h10-h00)*fx+(h01-h00)*fz:h11+(h01-h11)*(1-fx)+(h10-h11)*(1-fz);
+  };
+  for(let i=0;i<300;i++)for(const lane of [-8,0,8,15,23,31]){const p=atDistance(i/300*TRACK_LENGTH,lane);assert.ok(meshHeight(p.x,p.z)<p.y+.03,`Terrain intersects the road at ${i}, lane ${lane}`);}
 });

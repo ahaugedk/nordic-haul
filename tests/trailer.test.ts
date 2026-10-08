@@ -12,7 +12,7 @@ test('trailers remain coupled through bends, gradients and loop boundaries',()=>
     const axleX=trailer.x-Math.sin(trailer.yaw)*4.55*Math.cos(trailer.pitch),axleZ=trailer.z-Math.cos(trailer.yaw)*4.55*Math.cos(trailer.pitch),bottom=trailer.y+4.55*Math.sin(trailer.pitch);
     assert.ok(Math.abs(bottom-nearestTrack(axleX,axleZ).y)<.25,'Trailer wheels must follow terrain rather than float above it');
   }
-  const curved=atDistance(800),trailer=trailerPose(800,0);assert.ok(Math.abs(curved.yaw-trailer.yaw)>.02);assert.equal(TRAILER_LENGTH,13.6);
+  const curved=atDistance(1150),trailer=trailerPose(1150,0);assert.ok(Math.abs(curved.yaw-trailer.yaw)>.02);assert.equal(TRAILER_LENGTH,13.6);
 });
 test('both opponents have full-length colliders which advance and freeze with the race',()=>{
   const sim=new Simulation(DEFAULT_CONFIG,TENDERS[0]);sim.countdown=0;

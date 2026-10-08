@@ -36,7 +36,7 @@ export function validConfig(value:unknown):value is TruckConfig {
 }
 export type Tender={id:string;title:string;location:string;cargo:string;tonnes:number;distance:number;reward:number;par:number;description:string};
 export const TENDERS:Tender[] = [
-  {id:'harbor',title:'Autobahn kalder',location:'Aarhus · motorvejsbanen',cargo:'Maskindele',tonnes:12,distance:1,reward:42000,par:120,description:'Et motorvejsløb med lange strækninger og stejle bakker. Find din rytme og slå de to andre vognmænd.'},
-  {id:'heavy',title:'Den tunge kontrakt',location:'Aarhus · motorvejsbanen',cargo:'Industrimateriel',tonnes:24,distance:1.5,reward:68000,par:180,description:'Mere last, længere distance. De ekstra newtonmeter kan mærkes ud af svingene.'},
-  {id:'express',title:'Sidste afgang',location:'Aarhus · motorvejsbanen',cargo:'Reservedele',tonnes:8,distance:2,reward:82000,par:240,description:'To omgange og en stram bonustid. Hold flydende fart og lever før dine konkurrenter.'},
+  {id:'harbor',title:'Autobahn kalder',location:'Aarhus · motorvejsbanen',cargo:'Maskindele',tonnes:12,distance:1,reward:42000,par:180,description:'Et motorvejsløb med lange strækninger og stejle bakker. Find din rytme og slå de to andre vognmænd.'},
+  {id:'heavy',title:'Den tunge kontrakt',location:'Aarhus · motorvejsbanen',cargo:'Industrimateriel',tonnes:24,distance:1.5,reward:68000,par:270,description:'Mere last, længere distance. De ekstra newtonmeter kan mærkes ud af svingene.'},
+  {id:'express',title:'Sidste afgang',location:'Aarhus · motorvejsbanen',cargo:'Reservedele',tonnes:8,distance:2,reward:82000,par:360,description:'To omgange og en stram bonustid. Hold flydende fart og lever før dine konkurrenter.'},
 ];

@@ -1,7 +1,7 @@
 import { ArcRotateCamera,Color3,Color4,DirectionalLight,DynamicTexture,Engine,FreeCamera,HDRCubeTexture,HemisphericLight,Matrix,Mesh,MeshBuilder,PBRMaterial,Quaternion,RawCubeTexture,RenderTargetTexture,Scene,SceneLoader,ShadowGenerator,ShaderMaterial,SpotLight,PointLight,StandardMaterial,Texture,TransformNode,Vector3,VertexBuffer,VertexData,WebGPUEngine } from '@babylonjs/core';
 import '@babylonjs/loaders/glTF';
 import { cabFor,FINISHES,type TruckConfig } from '../data/catalog';
-import { TRACK,TRACK_LENGTH,atDistance,terrainHeight,sceneryClearance } from './track';
+import { TRACK,TRACK_LENGTH,TERRAIN_SIZE,TERRAIN_SEGMENTS,atDistance,terrainHeight,sceneryClearance } from './track';
 import { dayCycle } from './dayCycle';
 import { buildTrailer } from './trailerModel';
 import { mirrorSurfaceUV,orientMirrorFeed } from './mirrorSurface';
@@ -81,7 +81,7 @@ export class TruckScene {
   private buildMotorway(){
     const road=this.noiseMaterial('Autobahn asphalt','#44494b'),ground=this.noiseMaterial('rolling countryside','#51633d'),white=this.mat('reflective lane paint','#e8e8d5'),steel=this.mat('galvanized barriers','#8d979d',.42,.72),median=this.noiseMaterial('median grass','#596947');
     road.maxSimultaneousLights=8;ground.maxSimultaneousLights=8;white.maxSimultaneousLights=8;steel.maxSimultaneousLights=8;
-    const positions:number[]=[],indices:number[]=[],normals:number[]=[],uvs:number[]=[],n=92,size=1800;
+    const positions:number[]=[],indices:number[]=[],normals:number[]=[],uvs:number[]=[],n=TERRAIN_SEGMENTS,size=TERRAIN_SIZE;
     for(let z=0;z<=n;z++)for(let x=0;x<=n;x++){const px=-size/2+x/n*size,pz=-size/2+z/n*size;positions.push(px,terrainHeight(px,pz),pz);uvs.push(x/n,z/n);}
     for(let z=0;z<n;z++)for(let x=0;x<n;x++){const a=z*(n+1)+x;indices.push(a,a+n+1,a+1,a+1,a+n+1,a+n+2);}
     VertexData.ComputeNormals(positions,indices,normals);const vd=new VertexData();vd.positions=positions;vd.indices=indices;vd.normals=normals;vd.uvs=uvs;

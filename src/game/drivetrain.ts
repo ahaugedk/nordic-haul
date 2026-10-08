@@ -5,7 +5,9 @@ export function transportMass(truck:TruckConfig,tonnes:number){return AXLES.find
 /** Simplified driveline: engine kW -> tractive power, launch traction limit, rolling resistance, aero drag and grade. */
 export function accelerationFor(truck:TruckConfig,tonnes:number,speed:number,grade:number,throttle:boolean,brake:boolean){
   const e=engineFor(truck),mass=transportMass(truck,tonnes);
-  const force=throttle?Math.min(mass*1.75*(truck.crawler&&speed<2?1.06:1),e.kw*1000*.84/Math.max(5,speed)):0;
+  // Estimated effective wheel force at launch. Extra payload does not increase the engine's available tractive force.
+  const launchForce=63000*(e.torque/3000)*(truck.crawler&&speed<2?1.06:1);
+  const force=throttle?Math.min(launchForce,e.kw*1000*.84/Math.max(4,speed)):0;
   const resistance=mass*9.81*.007+4.1*(truck.cms?.98:1)*speed*speed;
   const hill=mass*9.81*grade/Math.sqrt(1+grade*grade);
   return (force-resistance-hill)/mass-(brake?5.4:0);

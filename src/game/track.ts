@@ -1,18 +1,20 @@
 /** Fictional, compressed Autobahn loop. Metres, clockwise; three racing lanes. */
-export const TRACK_RX=130, TRACK_RZ=450;
+export const TRACK_RX=160, TRACK_RZ=650;
 export const TRACK_SAMPLES=768;
+export const TERRAIN_SIZE=1800,TERRAIN_SEGMENTS=120;
 export const ROAD_HALF_WIDTH=8.5, ROAD_LANES=[-3.5,0,3.5];
-const STRAIGHT=640, ARC=Math.PI*TRACK_RX;
+export const TRACK_STRAIGHT=980;
+const STRAIGHT=TRACK_STRAIGHT, HALF_STRAIGHT=STRAIGHT/2, ARC=Math.PI*TRACK_RX;
 export const TRACK_LENGTH=2*STRAIGHT+2*ARC;
 const wrap=(s:number)=>((s%TRACK_LENGTH)+TRACK_LENGTH)%TRACK_LENGTH;
-export function elevationAt(s:number){const t=wrap(s)/TRACK_LENGTH*Math.PI*2;return 24+12*Math.sin(t-.6)+6*Math.sin(2*t-.7);}
-export function gradeAt(s:number){const t=wrap(s)/TRACK_LENGTH*Math.PI*2;return (12*Math.cos(t-.6)+12*Math.cos(2*t-.7))*Math.PI*2/TRACK_LENGTH;}
+export function elevationAt(s:number){const t=wrap(s)/TRACK_LENGTH*Math.PI*2;return 70+35*Math.sin(t-.9)+11*Math.sin(2*t-.8);}
+export function gradeAt(s:number){const t=wrap(s)/TRACK_LENGTH*Math.PI*2;return (35*Math.cos(t-.9)+22*Math.cos(2*t-.8))*Math.PI*2/TRACK_LENGTH;}
 export function atDistance(distance:number,lane=0){
   let s=wrap(distance),x:number,z:number,tx:number,tz:number;
-  if(s<STRAIGHT){x=TRACK_RX;z=-320+s;tx=0;tz=1;}
-  else if(s<STRAIGHT+ARC){const a=(s-STRAIGHT)/TRACK_RX;x=TRACK_RX*Math.cos(a);z=320+TRACK_RX*Math.sin(a);tx=-Math.sin(a);tz=Math.cos(a);}
-  else if(s<2*STRAIGHT+ARC){x=-TRACK_RX;z=320-(s-STRAIGHT-ARC);tx=0;tz=-1;}
-  else{const a=(s-2*STRAIGHT-ARC)/TRACK_RX;x=-TRACK_RX*Math.cos(a);z=-320-TRACK_RX*Math.sin(a);tx=Math.sin(a);tz=-Math.cos(a);}
+  if(s<STRAIGHT){x=TRACK_RX;z=-HALF_STRAIGHT+s;tx=0;tz=1;}
+  else if(s<STRAIGHT+ARC){const a=(s-STRAIGHT)/TRACK_RX;x=TRACK_RX*Math.cos(a);z=HALF_STRAIGHT+TRACK_RX*Math.sin(a);tx=-Math.sin(a);tz=Math.cos(a);}
+  else if(s<2*STRAIGHT+ARC){x=-TRACK_RX;z=HALF_STRAIGHT-(s-STRAIGHT-ARC);tx=0;tz=-1;}
+  else{const a=(s-2*STRAIGHT-ARC)/TRACK_RX;x=-TRACK_RX*Math.cos(a);z=-HALF_STRAIGHT-TRACK_RX*Math.sin(a);tx=Math.sin(a);tz=-Math.cos(a);}
   const grade=gradeAt(s);
   return {x:x+tz*lane,y:elevationAt(s),z:z-tx*lane,tx,tz,yaw:Math.atan2(tx,tz),grade,pitch:-Math.atan(grade),s};
 }
@@ -37,8 +39,9 @@ export function sceneryClearance(x:number,z:number,width:number,depth:number,mar
 }
 export function terrainHeight(x:number,z:number){
   const n=nearestTrack(x,z),edge=Math.min(Math.abs(n.lane),Math.abs(n.lane-23));
-  const blend=Math.min(1,Math.max(0,(edge-9)/85));
-  return n.y-.22+blend*(4*Math.sin(x*.014)*Math.cos(z*.01)-3);
+  const blend=Math.min(1,Math.max(0,(edge-25)/110));
+  const countryside=50+16*Math.sin(z*.003)+12*Math.sin(x*.004+z*.001);
+  return (n.y-.7)*(1-blend)+countryside*blend;
 }
 export class RaceProgress {
   distance=0; last=0; nextGate=TRACK_LENGTH/4; gate=1;

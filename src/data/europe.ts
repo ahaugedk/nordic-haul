@@ -33,7 +33,7 @@ export function tendersFrom(id:string):TravelTender[]{
   const a=cityFor(id);
   return (links[a.id]??links.aarhus).map((dest,i)=>{
     const b=cityFor(dest),km=approximateRoadKm(a,b),tonnes=[8,24,16][i],distance=[1,1.25,1.5][i];
-    return {id:`${a.id}-${b.id}`,title:`${a.name} → ${b.name}`,origin:a.id,destination:b.id,location:`${a.country} / ${b.country}`,cargo:['Maskindele','Industrimateriel','Reservedele'][i],tonnes,distance,reward:Math.round((27000+km*38)/1000)*1000+cargoPremium(tonnes),par:Math.round(120*distance),roadKm:km,description:'Tre spor, to rivaler og bakker op til 7 %. Vælg last: flere ton giver større præmie, men koster fart opad.'};
+    return {id:`${a.id}-${b.id}`,title:`${a.name} → ${b.name}`,origin:a.id,destination:b.id,location:`${a.country} / ${b.country}`,cargo:['Maskindele','Industrimateriel','Reservedele'][i],tonnes,distance,reward:Math.round((27000+km*38)/1000)*1000+cargoPremium(tonnes),par:Math.round(180*distance),roadKm:km,description:'Tre spor, to rivaler og lange bakker op til 11 %. Vælg last: flere ton giver større præmie, men koster fart opad.'};
   });
 }
 export function routePath(a:City,b:City){const p=project(a.lon,a.lat),q=project(b.lon,b.lat);return `M${p.x.toFixed(1)},${p.y.toFixed(1)} Q${((p.x+q.x)/2-22).toFixed(1)},${((p.y+q.y)/2-30).toFixed(1)} ${q.x.toFixed(1)},${q.y.toFixed(1)}`;}
