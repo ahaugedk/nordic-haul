@@ -4,6 +4,7 @@ import { cabFor,FINISHES,type TruckConfig } from '../data/catalog';
 import { TRACK,TRACK_LENGTH,atDistance,terrainHeight,sceneryClearance } from './track';
 import { dayCycle } from './dayCycle';
 import { buildTrailer } from './trailerModel';
+import { mirrorSurfaceUV,orientMirrorFeed } from './mirrorSurface';
 import type { RaceSnapshot } from './simulation';
 
 export class TruckScene {
@@ -14,6 +15,7 @@ export class TruckScene {
   private originals=new Map<Mesh,Float32Array>();private currentCab=0;private chassisDrop=0;
   private studio!:HDRCubeTexture;private outdoor!:HDRCubeTexture;private skybox?:Mesh;
   private instruments?:DynamicTexture;private navigation?:DynamicTexture;private displayTick=0;private cms=false;
+  private opticalMirrors:{mesh:Mesh;original:Mesh['material'];feed:StandardMaterial}[]=[];
   private mirrors:{camera:FreeCamera;texture:RenderTargetTexture;side:number}[]=[];
   private destination='Hamburg';private origin='Aarhus';private interiorMode=false;
   private compactLayout=false;
@@ -203,11 +205,22 @@ export class TruckScene {
         m.setVerticesData(VertexBuffer.UVKind,uv);m.material=climate;
       }
     }
-    const screens=this.truck.getChildMeshes().filter(m=>m.name.startsWith('cms_screen'));
-    for(let i=0;i<screens.length;i++){
-      const side=i===0?-1:1,camera=new FreeCamera('CMS '+side,Vector3.Zero(),this.scene);camera.minZ=.1;camera.maxZ=800;camera.fov=.86;
-      const texture=new RenderTargetTexture('CMS feed '+side,{width:256,height:512},this.scene,false);texture.activeCamera=camera;texture.refreshRate=4;texture.renderList=[...this.motorway.getChildMeshes(),...[...this.opponents,...this.opponentTrailers].flatMap(o=>o.getChildMeshes())];
-      this.scene.customRenderTargets.push(texture);screens[i].material=this.screenMaterial('CMS monitor '+side,texture);this.mirrors.push({camera,texture,side});
+    const surfaces=this.truck.getChildMeshes().filter((m):m is Mesh=>m instanceof Mesh&&/^(cms_screen|mirror_glass)/.test(m.name));
+    for(const side of [-1,1]){
+      const camera=new FreeCamera('rear view '+side,Vector3.Zero(),this.scene);camera.minZ=.1;camera.maxZ=800;camera.fov=.86;
+      const texture=new RenderTargetTexture('mirror feed '+side,{width:256,height:512},this.scene,false);texture.activeCamera=camera;texture.refreshRate=4;
+      // Sky and terrain must both be in the feed, including during the accelerated night cycle.
+      texture.renderList=[...(this.skybox?[this.skybox]:[]),...this.motorway.getChildMeshes(),...[...this.opponents,...this.opponentTrailers].flatMap(o=>o.getChildMeshes())];
+      orientMirrorFeed(texture);
+      const material=this.screenMaterial('rear view surface '+side,texture);
+      for(const surface of surfaces){
+        const positions=surface.getVerticesData(VertexBuffer.PositionKind)!;
+        const centreX=surface.getBoundingInfo().boundingBox.center.x;
+        if((centreX<0?-1:1)!==side)continue;
+        if(surface.name.startsWith('mirror_glass')){surface.setVerticesData(VertexBuffer.UVKind,mirrorSurfaceUV(positions));this.opticalMirrors.push({mesh:surface,original:surface.material,feed:material});}
+        surface.material=material;
+      }
+      this.scene.customRenderTargets.push(texture);this.mirrors.push({camera,texture,side});
     }
     this.drawDisplays(0,0,0);
   }
@@ -246,6 +259,7 @@ export class TruckScene {
     const trim=this.scene.getMaterialByName('trim') as PBRMaterial;if(trim)trim.albedoColor=Color3.FromHexString(c.blackEdition?'#131820':'#293036').toLinearSpace();
   }
   setMode(mode:'garage'|'race'){
+    for(const mirror of this.opticalMirrors)mirror.mesh.material=mode==='race'?mirror.feed:mirror.original;
     this.mode=mode;this.garage.setEnabled(mode==='garage');this.motorway.setEnabled(mode==='race');[...this.opponents,...this.opponentTrailers].forEach(x=>x.setEnabled(mode==='race'));
     this.scene.imageProcessingConfiguration.contrast=1;
     this.scene.clearColor=mode==='garage'?new Color4(.035,.045,.06,1):new Color4(.68,.73,.74,1);
@@ -254,7 +268,7 @@ export class TruckScene {
     this.shadow.getShadowMap()!.renderList=mode==='garage'?this.truck.getChildMeshes():[];
     this.interiorMode=false;document.body.dataset.view='exterior';this.cockpit.detachControl();this.skybox?.setEnabled(mode==='race');this.scene.environmentTexture=mode==='garage'?this.studio:this.outdoor;
     const glass=this.scene.getMaterialByName('glass') as PBRMaterial;if(glass){glass.alpha=mode==='garage'?.70:.06;glass.roughness=.04;glass.environmentIntensity=mode==='garage'?1:.25;}
-    this.scene.customRenderTargets=mode==='race'&&this.cms?this.mirrors.map(m=>m.texture):[];
+    this.scene.customRenderTargets=mode==='race'?this.mirrors.map(m=>m.texture):[];
     if(mode==='garage'){this.scene.environmentIntensity=1;const sun=this.scene.getLightByName('northern light') as DirectionalLight;sun.direction.set(-.45,-1,-.4);sun.intensity=2.3;sun.diffuse=Color3.White();for(const l of [...this.headlights,...this.streetLights])l.intensity=0;for(const {material} of this.nightMaterials)material.emissiveColor.setAll(0);this.truck.position.setAll(0);this.truck.rotation.setAll(0);this.scene.activeCamera=this.orbit;this.orbit.attachControl(this.canvas,true);this.scene.fogDensity=.0006;}
     else{this.orbit.detachControl();this.scene.activeCamera=this.cockpit;this.scene.fogDensity=.0007;}
     this.layoutCamera();
