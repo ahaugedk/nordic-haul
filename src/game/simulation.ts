@@ -7,7 +7,7 @@ import { GRID_ORIGIN,RIVALS,startingGrid } from './raceField';
 import { collisionPenalty,type Impact,type ImpactKind } from './impacts';
 import { RivalPath,chooseLane,sharesLane,type TrafficVehicle } from './aiDriving';
 export type Controls={throttle:boolean;brake:boolean;left:boolean;right:boolean};
-export type RaceSnapshot={speed:number;steering:number;elapsed:number;progress:number;place:number;startRow:number;offRoad:boolean;countdown:number;done:boolean;x:number;y:number;z:number;yaw:number;pitch:number;grade:number;impacts:Impact[];ai:{x:number;y:number;z:number;yaw:number;pitch:number;trailer:TrailerPose}[]};
+export type RaceSnapshot={speed:number;steering:number;elapsed:number;progress:number;remaining:number;place:number;startRow:number;offRoad:boolean;countdown:number;done:boolean;x:number;y:number;z:number;yaw:number;pitch:number;grade:number;impacts:Impact[];ai:{x:number;y:number;z:number;yaw:number;pitch:number;trailer:TrailerPose}[]};
 export class Simulation {
   world:RAPIER.World;body:RAPIER.RigidBody;aiBodies:RAPIER.RigidBody[]=[];aiTrailerBodies:RAPIER.RigidBody[]=[];
   elapsed=0;countdown=3;speed=0;yaw=0;steering=0;progress=new RaceProgress();paused=false;done=false;
@@ -141,7 +141,7 @@ export class Simulation {
   snapshot():RaceSnapshot{
     const p=this.body.translation(),n=nearestTrack(p.x,p.z),frame=atDistance(n.s),alignment=Math.sin(this.yaw)*frame.tx+Math.cos(this.yaw)*frame.tz;
     const initial=this.grid.player.distance-GRID_ORIGIN;
-    return {speed:this.speed,steering:this.steering,elapsed:this.elapsed,progress:Math.min(1,Math.max(0,(this.progress.validatedDistance-initial)/(this.target-initial))),place:1+this.aiDistances.filter(x=>x>this.progress.validatedDistance).length,startRow:this.grid.player.row,offRoad:n.distance>7.5,countdown:this.countdown,done:this.done,x:p.x,y:n.y,z:p.z,yaw:this.yaw,pitch:-Math.atan(n.grade*alignment),grade:n.grade*alignment,impacts:this.impacts.map(i=>({...i})),ai:this.aiDistances.map((s,i)=>{const distance=s+GRID_ORIGIN,path=this.aiPaths[i];return {...path.pose(distance),trailer:trailerPose(distance,path.laneAt(distance),s=>path.pose(s))};})};
+    return {speed:this.speed,steering:this.steering,elapsed:this.elapsed,progress:Math.min(1,Math.max(0,(this.progress.validatedDistance-initial)/(this.target-initial))),remaining:Math.max(0,this.target-this.progress.validatedDistance),place:1+this.aiDistances.filter(x=>x>this.progress.validatedDistance).length,startRow:this.grid.player.row,offRoad:n.distance>7.5,countdown:this.countdown,done:this.done,x:p.x,y:n.y,z:p.z,yaw:this.yaw,pitch:-Math.atan(n.grade*alignment),grade:n.grade*alignment,impacts:this.impacts.map(i=>({...i})),ai:this.aiDistances.map((s,i)=>{const distance=s+GRID_ORIGIN,path=this.aiPaths[i];return {...path.pose(distance),trailer:trailerPose(distance,path.laneAt(distance),s=>path.pose(s))};})};
   }
   dispose(){this.world.free();}
 }

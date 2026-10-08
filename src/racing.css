@@ -64,3 +64,5 @@ footer,body[data-mode=tenders] footer{height:35px;padding:0 32px;background:#0a0
 
 .sound-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;min-width:99px;padding:8px 11px;border:1px solid #637226;background:#172219;color:var(--race);font-size:12px;font-weight:600;white-space:nowrap}
 .sound-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.sound-muted{display:none}.sound-toggle[aria-pressed=false]{background:#17202b;border-color:#53616d;color:#aebac5}.sound-toggle[aria-pressed=false] .sound-waves{display:none}.sound-toggle[aria-pressed=false] .sound-muted{display:block}
+
+body[data-mode="results"] .tender-backdrop{background:linear-gradient(90deg,#07121c60,#07121c80);backdrop-filter:none}

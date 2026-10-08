@@ -10,6 +10,7 @@ import type { RaceSnapshot } from './simulation';
 import { RIVALS } from './raceField';
 import { isMobileLayout,isAppleMobile,previewFrame } from './mobileLayout';
 import { CollisionSparks } from './collisionSparks';
+import { buildTerminal,terminalLayout,terminalGroundHeight,terminalSceneryClearance,type LogisticsTerminal } from './terminal';
 
 export class TruckScene {
   engine:Engine|WebGPUEngine;scene:Scene;garage:TransformNode;motorway:TransformNode;
@@ -27,6 +28,9 @@ export class TruckScene {
   private sparks:CollisionSparks;
   private skyMaterial?:ShaderMaterial;private headlights:SpotLight[]=[];private streetLights:PointLight[]=[];
   private lampPositions:Vector3[]=[];private nightMaterials:{material:PBRMaterial;color:Color3}[]=[];
+  private terminal?:LogisticsTerminal;
+  private arrivalCamera?:FreeCamera;
+  private terrain?:Mesh;private terrainOriginal?:Float32Array;
   private constructor(engine:Engine|WebGPUEngine,public canvas:HTMLCanvasElement,backend:string){
     this.engine=engine;this.backend=backend;this.scene=new Scene(engine);this.scene.clearColor=new Color4(.035,.045,.06,1);
     this.sparks=new CollisionSparks(this.scene);
@@ -69,7 +73,7 @@ export class TruckScene {
     const m=this.mat(name,color,.87);const tex=new DynamicTexture(name+' texture',256,this.scene,false);const ctx=tex.getContext();ctx.fillStyle=color;ctx.fillRect(0,0,256,256);
     let seed=42;for(let i=0;i<18000;i++){seed=(seed*1664525+1013904223)>>>0;const x=seed%256;seed=(seed*1664525+1013904223)>>>0;ctx.fillStyle=i%2?'rgba(255,255,255,.035)':'rgba(0,0,0,.035)';ctx.fillRect(x,seed%256,2,2);}tex.update();tex.uScale=35;tex.vScale=35;m.albedoTexture=tex;return m;
   }
-  private label(content:string,width:number,height:number,color:string,bg:string){const t=new DynamicTexture('sign '+content,{width:1024,height:256},this.scene,false);const c=t.getContext() as CanvasRenderingContext2D;c.fillStyle=bg;c.fillRect(0,0,1024,256);c.fillStyle=color;c.font='500 85px Arial';c.textAlign='center';c.fillText(content,512,158);t.update();const mat=new StandardMaterial('sign',this.scene);mat.diffuseTexture=t;mat.emissiveColor=new Color3(.28,.28,.28);mat.specularColor=Color3.Black();const p=MeshBuilder.CreatePlane(content,{width,height},this.scene);p.material=mat;return p;}
+  private label(content:string,width:number,height:number,color:string,bg:string){const tw=width/height<3?512:1024,maxFont=content.length<4?180:85;const t=new DynamicTexture('sign '+content,{width:tw,height:256},this.scene,false);const c=t.getContext() as CanvasRenderingContext2D;c.fillStyle=bg;c.fillRect(0,0,tw,256);c.fillStyle=color;c.font=`500 ${maxFont}px Arial`;const font=Math.min(maxFont,maxFont*(tw-64)/c.measureText(content).width);c.font=`500 ${font}px Arial`;c.textAlign='center';c.fillText(content,tw/2,128+font*.35);t.update();const mat=new StandardMaterial('sign',this.scene);mat.diffuseTexture=t;mat.emissiveColor=new Color3(.28,.28,.28);mat.specularColor=Color3.Black();const p=MeshBuilder.CreatePlane(content,{width,height},this.scene);p.material=mat;return p;}
   private buildGarage(){
     const concrete=this.noiseMaterial('concrete','#434b53'),wall=this.mat('wall','#11181e'),steel=this.mat('steel','#414d59',.4,.6),dark=this.mat('seams','#10151a'),yellow=this.mat('safety yellow','#dcff00');
     this.box('studio floor',0,-.1,0,65,.2,65,concrete,this.garage);
@@ -94,6 +98,7 @@ export class TruckScene {
     for(let z=0;z<n;z++)for(let x=0;x<n;x++){const a=z*(n+1)+x;indices.push(a,a+n+1,a+1,a+1,a+n+1,a+n+2);}
     VertexData.ComputeNormals(positions,indices,normals);const vd=new VertexData();vd.positions=positions;vd.indices=indices;vd.normals=normals;vd.uvs=uvs;
     const terrain=new Mesh('rolling Autobahn terrain',this.scene);vd.applyToMesh(terrain);terrain.material=ground;terrain.parent=this.motorway;terrain.receiveShadows=true;
+    this.terrain=terrain;this.terrainOriginal=new Float32Array(positions);
     const ribbon=(name:string,lanes:number[],material:PBRMaterial,lift=.04)=>{const mesh=MeshBuilder.CreateRibbon(name,{pathArray:lanes.map(l=>TRACK.map(p=>{const q=atDistance(p.s,l);return new Vector3(q.x,q.y+lift,q.z);})),sideOrientation:Mesh.DOUBLESIDE},this.scene);mesh.material=material;mesh.parent=this.motorway;mesh.receiveShadows=true;return mesh;};
     ribbon('three racing lanes',[-8.5,8.5],road);ribbon('opposite carriageway',[14.5,31.5],road);ribbon('planted central reservation',[8.5,14.5],median,.035);
     const details:Mesh[]=[];
@@ -110,7 +115,7 @@ export class TruckScene {
     const scenery:Mesh[]=[];
     for(let i=0;i<26;i++){
       const p=atDistance(i/26*TRACK_LENGTH,i%2?-70:90),w=10+i%4*2,d=13;
-      if(!sceneryClearance(p.x,p.z,w+3,d+3))continue;
+      if(!sceneryClearance(p.x,p.z,w+3,d+3)||!terminalSceneryClearance(p.x,p.z,Math.hypot(w+3,d+3)/2))continue;
       const y=terrainHeight(p.x,p.z);
       scenery.push(this.box('roadside house',p.x,y+3.7,p.z,w,7.4,d,wall,this.motorway));
       const top=MeshBuilder.CreateCylinder('pitched roof',{diameter:1,height:w+2,tessellation:3},this.scene);top.scaling.set(d+2,1,5);top.rotation.z=Math.PI/2;top.position.set(p.x,y+8.8,p.z);top.material=roof;top.parent=this.motorway;scenery.push(top);
@@ -118,7 +123,7 @@ export class TruckScene {
     }
     for(let i=0;i<240;i++){
       const p=atDistance(i/240*TRACK_LENGTH,(i%2?-1:1)*(42+(i*37%160))),radius=3.5+i%3;
-      if(!sceneryClearance(p.x,p.z,radius*2,radius*2,12))continue;
+      if(!sceneryClearance(p.x,p.z,radius*2,radius*2,12)||!terminalSceneryClearance(p.x,p.z,radius))continue;
       const y=terrainHeight(p.x,p.z),height=9+i%6;
       scenery.push(this.box('forest trunk',p.x,y+height*.3,p.z,.6,height*.6,.6,wood,this.motorway));
       const crown=MeshBuilder.CreateCylinder('conifer canopy',{diameterTop:0,diameterBottom:radius*2,height:height,tessellation:9},this.scene);crown.position.set(p.x,y+height*.65,p.z);crown.material=leaf;crown.parent=this.motorway;scenery.push(crown);
@@ -153,8 +158,11 @@ export class TruckScene {
     this.scene.environmentIntensity=.06+c.daylight*.78;this.scene.fogColor=Color3.Lerp(new Color3(.025,.04,.08),new Color3(.65,.75,.81),c.daylight);this.scene.clearColor=new Color4(this.scene.fogColor.r,this.scene.fogColor.g,this.scene.fogColor.b,1);
     this.skyMaterial?.setFloat('daylight',c.daylight);this.skyMaterial?.setFloat('twilight',c.twilight);this.skyMaterial?.setVector3('sunDirection',sunDirection);
     for(const light of this.headlights)light.intensity=c.night?1800:0;
+    for(const light of this.terminal?.floodlights??[])light.intensity=c.night&&this.terminal?.root.isEnabled()?14000:0;
+    if(import.meta.env.DEV&&this.terminal){const wall=this.terminal.root.getChildMeshes().find(m=>m.name.startsWith('terminal warehouse'));this.canvas.dataset.terminalLights=JSON.stringify({lights:this.terminal.floodlights.map(l=>({enabled:l.isEnabled(),intensity:l.intensity,priority:l.renderPriority})),sources:wall?.lightSources.map(l=>l.name)});}
     for(const {material,color} of this.nightMaterials)material.emissiveColor=color.scale(c.night?.9:.03);
-    const nearest=this.lampPositions.map(p=>({p,d:(p.x-x)**2+(p.z-z)**2})).sort((a,b)=>a.d-b.d);
+    const lamps=this.terminal?.root.isEnabled()?this.lampPositions.concat(this.terminal.lamps):this.lampPositions;
+    const nearest=lamps.map(p=>({p,d:(p.x-x)**2+(p.z-z)**2})).sort((a,b)=>a.d-b.d);
     for(let i=0;i<this.streetLights.length;i++){const l=this.streetLights[i];l.position.copyFrom(nearest[i].p);l.intensity=c.night?160:0;}
     this.canvas.dataset.daytime=c.label;this.canvas.dataset.night=String(c.night);
   }
@@ -232,7 +240,19 @@ export class TruckScene {
     }
     this.drawDisplays(0,0,0);
   }
-  setRoute(origin:string,destination:string){this.origin=origin;this.destination=destination;this.drawDisplays(0,0,0);}
+  setRoute(origin:string,destination:string,distance=1){
+    this.origin=origin;this.destination=destination;this.drawDisplays(0,0,0);
+    if(this.terminal){const old=this.terminal,meshes=old.root.getChildMeshes();this.nightMaterials=this.nightMaterials.filter(m=>!old.nightMaterials.includes(m));for(const light of this.headlights)light.excludedMeshes=light.excludedMeshes.filter(m=>!meshes.includes(m));old.root.dispose(false,true);}
+    this.terminal=buildTerminal(this.scene,this.motorway,distance,destination,(...args)=>this.label(...args));this.nightMaterials.push(...this.terminal.nightMaterials);
+    // Reserve the terminal's light budget for its own projectors and nearby yard lamps.
+    for(const light of this.headlights)light.excludedMeshes=light.excludedMeshes.concat(this.terminal.root.getChildMeshes());
+    if(this.terrain&&this.terrainOriginal){
+      const layout=terminalLayout(distance),positions=new Float32Array(this.terrainOriginal),normals:number[]=[];
+      for(let i=0;i<positions.length;i+=3)positions[i+1]=terminalGroundHeight(layout,positions[i],positions[i+2],positions[i+1]);
+      VertexData.ComputeNormals(positions,this.terrain.getIndices()!,normals);
+      this.terrain.setVerticesData(VertexBuffer.PositionKind,positions);this.terrain.setVerticesData(VertexBuffer.NormalKind,normals);this.terrain.refreshBoundingInfo();
+    }
+  }
   previewInterior(enabled:boolean){
     if(this.mode!=='garage')return;this.interiorMode=enabled;document.body.dataset.view=enabled?'interior':'exterior';
     const glass=this.scene.getMaterialByName('glass') as PBRMaterial;if(glass)glass.alpha=enabled?.06:.70;
@@ -267,6 +287,14 @@ export class TruckScene {
     const cloth=this.scene.getMaterialByName('cloth') as PBRMaterial;if(cloth)cloth.albedoColor=Color3.FromHexString(c.blackEdition?'#181c20':'#655b4b').toLinearSpace();
     const trim=this.scene.getMaterialByName('trim') as PBRMaterial;if(trim)trim.albedoColor=Color3.FromHexString(c.blackEdition?'#131820':'#293036').toLinearSpace();
   }
+  showTerminalArrival(){
+    if(!this.terminal)return;
+    const camera=this.arrivalCamera??=new FreeCamera('terminal arrival camera',Vector3.Zero(),this.scene);
+    const matrix=this.terminal.root.computeWorldMatrix(true),floor=this.terminal.floor;
+    camera.position.copyFrom(Vector3.TransformCoordinates(new Vector3(-9,floor+13,-52),matrix));
+    camera.setTarget(Vector3.TransformCoordinates(new Vector3(-58,floor+5,38),matrix));camera.fov=1.2;camera.minZ=.1;camera.maxZ=4000;
+    this.scene.activeCamera=camera;this.scene.customRenderTargets=[];
+  }
   setMode(mode:'garage'|'race'){
     this.sparks.reset();
     for(const mirror of this.opticalMirrors)mirror.mesh.material=mode==='race'?mirror.feed:mirror.original;
@@ -284,6 +312,8 @@ export class TruckScene {
     this.layoutCamera();
   }
   updateRace(s:RaceSnapshot){
+    this.terminal?.root.setEnabled(s.remaining<520&&s.countdown<=0);
+    this.canvas.dataset.terminal=s.remaining<520?'arrival':'';
     this.sparks.update(s);
     this.canvas.dataset.lastImpact=s.impacts.at(-1)?.kind??'';
     this.truck.position.set(s.x,s.y,s.z);this.truck.rotation.set(s.pitch,s.yaw,0);this.updateDaylight(s.elapsed,s.x,s.z);
