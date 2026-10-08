@@ -1,15 +1,11 @@
 /* All layout overrides are limited to phones. Hidden helpers add no desktop layout. */
 .mobile-specs,.mobile-part-info{display:none}
-.mobile-audio-toggle,.mobile-audio-dismiss{display:none}
 .garage-actions{display:contents}.options-caption,.bill-label-mobile{display:none}
 @media (max-width:799px), (max-height:500px) and (pointer:coarse){
   :root{--mobile-header:calc(108px + env(safe-area-inset-top,0px));--mobile-footer:calc(32px + env(safe-area-inset-bottom,0px));--mobile-panel:min(52dvh,460px)}
   .topbar,body[data-mode=tenders] .topbar{height:var(--mobile-header);padding:calc(8px + env(safe-area-inset-top,0px)) 14px 0;align-items:flex-start}
   .brand .game-name{display:block;font-size:27px}.brand .wordmark,.brand-divider,.topbar nav{display:none}
-  .header-right{padding:0;gap:8px}.menu-sound{min-height:40px;padding:8px;font-size:10px}
-  .header-right .radio-player{position:absolute;top:calc(56px + env(safe-area-inset-top,0px));left:12px;right:12px;width:auto;height:44px;padding:5px 7px;gap:6px}
-  .radio-player>button{width:32px;height:32px}.radio-station strong{font-size:19px}.radio-station span{font-size:9px;letter-spacing:0}
-  .header-right .radio-volume,.header-right .radio-volume input{width:46px}
+  .header-right{padding:0;gap:8px}
   .balance strong{font-size:22px}.balance span,body[data-mode=tenders] .balance span{font-size:7px;letter-spacing:.5px}
   footer,body[data-mode=tenders] footer{height:var(--mobile-footer);padding:0 12px env(safe-area-inset-bottom,0px);font-size:7px;letter-spacing:.3px}
   footer button,body[data-mode=tenders] footer button{font-size:9px;min-height:28px}
@@ -41,7 +37,7 @@
   .config-panel .primary{flex:none;min-height:46px;padding:10px 14px;font-size:21px;margin-top:7px}.config-panel .panel-note{display:none}.budget-warning{flex:none;font-size:10px;margin:4px 0}
   /* A compact map, swipeable route cards and a readable cargo selection. */
   .dispatch-screen{inset:var(--mobile-header) 0 var(--mobile-footer);padding:12px 12px 0;overflow:auto;overscroll-behavior:contain;touch-action:pan-y}
-  .dispatch-heading{margin-bottom:10px;align-items:center;gap:8px}.dispatch-heading .eyebrow{display:none}.dispatch-heading h1{font-size:29px;letter-spacing:-.5px;margin:0 0 4px}.dispatch-heading p{font-size:11px;margin:0}.map-sound{width:40px;height:40px;padding:8px}
+  .dispatch-heading{margin-bottom:10px;align-items:center;gap:8px}.dispatch-heading .eyebrow{display:none}.dispatch-heading h1{font-size:29px;letter-spacing:-.5px;margin:0 0 4px}.dispatch-heading p{font-size:11px;margin:0}
   .dispatch-layout{display:flex;flex-direction:column;gap:10px;height:auto;min-height:0}.europe-chart{height:clamp(180px,24dvh,260px);flex:none}.europe-svg{transform:none;width:100%;height:100%}
   .map-position{left:8px;top:8px;padding:6px 8px;gap:5px}.map-position>div{gap:2px}.map-position strong{font-size:20px}.map-position span,.map-position small{font-size:7px}.map-coordinates{font-size:6px;top:8px;right:8px}
   .map-legend{font-size:7px;gap:9px;left:8px;bottom:21px}.map-attribution{font-size:6px;bottom:7px;right:8px}
@@ -57,7 +53,6 @@
   .race-environment{top:calc(151px + env(safe-area-inset-top,0px));right:12px;padding:7px 9px;gap:3px}.race-environment strong{font-size:18px}.race-environment span{font-size:8px;letter-spacing:.5px}.rival-board,.race-controls{display:none}
   .driver-hud{left:12px;bottom:calc(148px + env(safe-area-inset-bottom,0px));min-width:122px;max-width:155px;padding:9px 12px;gap:3px}.driver-hud>span{font-size:8px;letter-spacing:1px}.driver-hud>strong{font-size:48px;letter-spacing:-1px}.driver-hud small{font-size:10px;margin-left:2px}.driver-hud>div{font-size:9px}
   .minimap{right:12px;bottom:calc(148px + env(safe-area-inset-bottom,0px));padding:8px}.minimap svg{width:54px;height:79px}.minimap>span{display:none}
-  .race-radio{left:12px;right:12px;bottom:calc(87px + env(safe-area-inset-bottom,0px));width:auto;max-width:none;padding:7px 9px;transform:none;height:49px}.race-radio .radio-station strong{font-size:20px}.race-radio .radio-station span{font-size:8px}.race-radio .radio-volume,.race-radio .radio-volume input{width:46px}
   .touch-controls{position:absolute;pointer-events:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));gap:8px;z-index:4}
   .touch-controls button{min-width:0;min-height:64px;padding:12px 4px;font-size:15px;font-weight:600;background:#132536ed;border:1px solid #6587a6;color:#e8f2f8;border-radius:4px;touch-action:none;user-select:none}.touch-controls button:last-child{background:var(--race);color:#0b141b;border-color:var(--race)}.touch-controls button:nth-child(3){margin-left:0}.touch-controls button:nth-child(-n+2){font-size:27px}
   .offroad{left:12px;top:calc(211px + env(safe-area-inset-top,0px));max-width:calc(100% - 24px);font-size:11px;padding:8px}.countdown{top:31%;font-size:110px}.countdown:before,.countdown:after{width:30px}
@@ -66,8 +61,7 @@
   .source-dialog{padding:24px;max-height:calc(100dvh - 32px)}
 }
 @media (max-width:799px) and (orientation:portrait) and (max-height:720px){
-  :root{--mobile-header:calc(94px + env(safe-area-inset-top,0px));--mobile-panel:56dvh}
-  .header-right .radio-player{top:calc(48px + env(safe-area-inset-top,0px));height:40px}.brand .game-name{font-size:24px}.menu-sound{min-height:36px}
+  :root{--mobile-header:calc(94px + env(safe-area-inset-top,0px));--mobile-panel:56dvh}.brand .game-name{font-size:24px}
   .config-panel{padding:10px}.panel-title h2{font-size:19px}.panel-title .eyebrow{font-size:7px}.mobile-specs{font-size:18px;margin-top:3px}
   .config-panel .tabs{margin:3px 0 5px}.tabs button{font-size:12px;padding:7px 5px;min-width:53px}
   .config-panel .option{min-height:78px;padding:8px}.config-panel .option-name{font-size:19px}.config-panel .option-detail{font-size:10px}.config-panel .option-footer{margin-top:5px;padding-top:5px;font-size:8px}
@@ -75,8 +69,7 @@
 }
 @media (max-width:799px) and (orientation:landscape), (max-height:500px) and (pointer:coarse) and (orientation:landscape){
   :root{--mobile-header:calc(52px + env(safe-area-inset-top,0px));--mobile-panel:calc(100dvh - var(--mobile-header) - var(--mobile-footer) - 8px)}
-  .topbar,body[data-mode=tenders] .topbar{padding-top:calc(6px + env(safe-area-inset-top,0px));align-items:flex-start}.brand .game-name{font-size:23px}.header-right{gap:6px}.menu-sound{font-size:9px;min-height:38px}
-  .header-right .radio-player{position:static;left:auto;right:auto;top:auto;width:238px;height:38px}.header-right .radio-station strong{font-size:17px}.header-right .radio-player>button{width:27px;height:28px}.header-right .radio-volume,.header-right .radio-volume input{width:34px}.balance strong{font-size:19px}.balance span{font-size:6px}
+  .topbar,body[data-mode=tenders] .topbar{padding-top:calc(6px + env(safe-area-inset-top,0px));align-items:flex-start}.brand .game-name{font-size:23px}.header-right{gap:6px}.balance strong{font-size:19px}.balance span{font-size:6px}
   .garage-stage{top:var(--mobile-header);right:44%;bottom:var(--mobile-footer)}.garage-copy{top:10px;left:12px}.garage-copy>.eyebrow{font-size:8px}.viewer-controls,body[data-view=interior] .viewer-controls{top:calc(var(--mobile-header) + 4px);right:calc(44% + 8px);left:auto}.viewer-controls button{font-size:10px;min-height:36px;padding:6px 8px}
   body[data-view=interior]:not([data-panel=show]) .garage-stage{right:0}.config-panel{top:var(--mobile-header);left:56%;right:8px;bottom:var(--mobile-footer);height:auto;padding:10px}.panel-title h2{font-size:19px;margin:0}.panel-title .eyebrow{display:none}.mobile-specs{font-size:18px;gap:16px;margin-top:3px}.config-panel .tabs{min-height:36px;margin:3px 0 6px}.tabs button{font-size:12px;min-height:36px;min-width:48px;padding:5px}
   .mobile-part-info{order:2}.config-panel .option{min-height:74px;padding:8px}.config-panel .option-name{font-size:18px}.config-panel .option-detail{font-size:10px}.config-panel .option-footer{font-size:8px;margin-top:4px;padding-top:4px}.config-panel .option-footer b{font-size:10px}.configuration-bill{margin-top:5px;padding-top:5px;gap:1px}.configuration-bill div{min-height:18px;font-size:10px}.configuration-bill strong{font-size:19px}.config-panel .primary{min-height:40px;font-size:19px;padding:8px 10px;margin-top:5px}
@@ -84,7 +77,6 @@
   .race-status{top:calc(56px + env(safe-area-inset-top,0px));right:auto;width:300px}.race-status>div{padding:6px 9px}.race-status strong{font-size:23px}.race-status #place{font-size:29px}.race-route{top:calc(119px + env(safe-area-inset-top,0px));right:auto;width:300px}.race-environment{top:calc(57px + env(safe-area-inset-top,0px));right:12px}.race-environment strong{font-size:17px}
   .driver-hud,.minimap{bottom:calc(85px + env(safe-area-inset-bottom,0px))}.driver-hud>strong{font-size:40px}.driver-hud{min-width:110px;padding:7px 10px}.minimap svg{height:65px;width:45px}
   .touch-controls{display:flex;gap:8px;align-items:center}.touch-controls button{width:62px;min-height:57px;padding:9px 4px}.touch-controls button:nth-child(2){margin-right:auto}
-  .race-radio{left:50%;right:auto;transform:translateX(-50%);bottom:calc(15px + env(safe-area-inset-bottom,0px));width:252px;height:44px;padding:5px 7px;gap:4px}.race-radio .radio-station strong{font-size:18px}.race-radio .radio-volume,.race-radio .radio-volume input{width:32px}.race-radio>button{width:25px;height:28px}
   .countdown{top:29%;font-size:90px}.offroad{top:calc(137px + env(safe-area-inset-top,0px));font-size:10px}.result-panel{top:50%;max-height:calc(100dvh - 24px);padding:18px}.result-panel h1{font-size:28px}.place-medal{font-size:48px}.result-bill{margin:12px 0}
 }
 @media (max-width:799px) and (orientation:portrait) and (max-height:600px){
@@ -94,14 +86,6 @@
 @media (max-width:799px), (max-height:500px) and (pointer:coarse){
   :root{--mobile-header:calc(56px + env(safe-area-inset-top,0px));--mobile-panel:min(50dvh,400px)}
   .topbar,body[data-mode=tenders] .topbar{padding-top:calc(8px + env(safe-area-inset-top,0px))}
-  .mobile-audio-toggle{display:flex;align-items:center;justify-content:center;gap:7px;min-height:40px;min-width:76px;padding:7px 10px;color:var(--race);background:#14202b;border:1px solid #53616d;font-size:17px}
-  .mobile-audio-toggle span{font-size:12px;font-weight:600}.mobile-audio-toggle[aria-expanded=true]{background:var(--race);color:#10151b;border-color:var(--race)}
-  .header-right .menu-sound,.header-right .radio-player{display:none}
-  body[data-mobile-audio=show] .topbar{z-index:10}
-  body[data-mobile-audio=show] .header-right .radio-player{display:flex;position:absolute;top:calc(var(--mobile-header) + 8px);left:12px;right:12px;width:auto;z-index:3;height:48px;background:#172431;border-color:#667481}
-  body[data-mobile-audio=show] .header-right .menu-sound{display:block;position:absolute;top:calc(var(--mobile-header) + 55px);left:12px;right:12px;z-index:3;width:calc(100% - 24px);height:40px;text-align:left;background:#172431;border-color:#667481;border-top:0}
-  body[data-mobile-audio=show] .mobile-audio-toggle{position:relative;z-index:3}
-  body[data-mobile-audio=show] .mobile-audio-dismiss{display:block;position:fixed;inset:0;width:100%;height:100%;padding:0;border:0;background:#0005;z-index:1}
   .config-panel{padding:12px 14px;border-left-color:#4c5865;border-right-color:#4c5865}
   .config-panel .panel-title{display:flex}.config-panel .panel-title h2{display:none}.config-panel .panel-title .eyebrow{display:block;font-size:9px;letter-spacing:1.1px;color:#a4b3c0}
   .mobile-specs{font-size:20px;gap:24px;margin-top:5px}.config-panel .tabs{margin:6px 0 10px}.tabs button{font-size:13px}
@@ -116,8 +100,7 @@
   :root{--mobile-panel:55dvh}
   .config-panel .panel-title{display:none}.mobile-specs{margin-top:0}.config-panel .tabs{margin:3px 0 6px}
 }
-@media (max-width:799px) and (orientation:landscape), (max-height:500px) and (pointer:coarse) and (orientation:landscape){
-  .mobile-audio-toggle{min-height:36px}.mobile-specs{font-size:18px;margin-top:3px}.config-panel .panel-title{display:none}.config-panel .tabs{margin:3px 0 6px}.config-panel .option-name{font-size:18px}.config-panel .option-detail{font-size:10px}
+@media (max-width:799px) and (orientation:landscape), (max-height:500px) and (pointer:coarse) and (orientation:landscape){.mobile-specs{font-size:18px;margin-top:3px}.config-panel .panel-title{display:none}.config-panel .tabs{margin:3px 0 6px}.config-panel .option-name{font-size:18px}.config-panel .option-detail{font-size:10px}
 }
 /* Compact mobile choices with a visible scroll cue and one shared action row. */
 @media (max-width:799px), (max-height:500px) and (pointer:coarse){
@@ -137,4 +120,12 @@
   .garage-actions .configuration-bill strong{font-size:17px;line-height:1.05}.garage-actions .configuration-bill b{font-size:12px;line-height:1.1}
   .garage-actions .bill-label-full{display:none}.garage-actions .bill-label-mobile{display:inline;font-size:9px;color:#aab7c2}
   .garage-actions .budget-warning{grid-column:1 / -1;grid-row:2;font-size:10px;margin:0}
+}
+
+@media (max-width:799px), (max-height:500px) and (pointer:coarse){
+  .sound-toggle{min-width:87px;min-height:40px;padding:7px 9px;font-size:11px}.sound-toggle svg{width:18px;height:18px}
+  .race-header .sound-toggle{min-width:85px;min-height:44px}.driver-hud,.minimap{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+}
+@media (max-width:799px) and (orientation:landscape), (max-height:500px) and (pointer:coarse) and (orientation:landscape){
+  .driver-hud,.minimap{bottom:calc(85px + env(safe-area-inset-bottom,0px))}
 }
