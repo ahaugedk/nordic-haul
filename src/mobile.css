@@ -1,6 +1,7 @@
 /* All layout overrides are limited to phones. Hidden helpers add no desktop layout. */
 .mobile-specs,.mobile-part-info{display:none}
 .mobile-audio-toggle,.mobile-audio-dismiss{display:none}
+.garage-actions{display:contents}.options-caption,.bill-label-mobile{display:none}
 @media (max-width:799px), (max-height:500px) and (pointer:coarse){
   :root{--mobile-header:calc(108px + env(safe-area-inset-top,0px));--mobile-footer:calc(32px + env(safe-area-inset-bottom,0px));--mobile-panel:min(52dvh,460px)}
   .topbar,body[data-mode=tenders] .topbar{height:var(--mobile-header);padding:calc(8px + env(safe-area-inset-top,0px)) 14px 0;align-items:flex-start}
@@ -117,4 +118,23 @@
 }
 @media (max-width:799px) and (orientation:landscape), (max-height:500px) and (pointer:coarse) and (orientation:landscape){
   .mobile-audio-toggle{min-height:36px}.mobile-specs{font-size:18px;margin-top:3px}.config-panel .panel-title{display:none}.config-panel .tabs{margin:3px 0 6px}.config-panel .option-name{font-size:18px}.config-panel .option-detail{font-size:10px}
+}
+/* Compact mobile choices with a visible scroll cue and one shared action row. */
+@media (max-width:799px), (max-height:500px) and (pointer:coarse){
+  .mobile-specs{display:none}
+  .options-caption{display:flex;align-items:center;justify-content:space-between;flex:none;min-height:23px;margin:0 0 5px;font-size:9px;letter-spacing:.6px;color:#94a6b5}
+  .options-caption .scroll-hint{color:var(--race);font-size:10px;letter-spacing:0}
+  .config-panel .options{gap:6px;scrollbar-width:thin;scrollbar-color:#b4ca49 #26313d}
+  .config-panel .options[data-can-scroll=true][data-at-end=false]{-webkit-mask-image:linear-gradient(#000 calc(100% - 10px),transparent);mask-image:linear-gradient(#000 calc(100% - 10px),transparent)}
+  .config-panel .options .option{min-height:46px;padding:6px 9px;margin:0;row-gap:2px;column-gap:8px}
+  .config-panel .options .option .option-name{font-size:16px;line-height:1.1}.config-panel .options .option .option-detail{font-size:9px;line-height:1.3}.config-panel .options .option .option-footer b{font-size:10px}
+  .config-panel .options .compact-options .option{min-height:61px;padding:7px}.config-panel .options .compact-options .option-name{font-size:15px}.config-panel .options .compact-options .option-detail{font-size:9px}.config-panel .options .compact-options .option-footer{margin-top:4px}
+  .garage-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:12px;row-gap:5px;align-items:center;flex:none;border-top:1px solid #414a54;padding-top:9px;margin-top:8px}
+  .garage-actions #commit{grid-column:1;grid-row:1;width:100%;min-width:0;min-height:52px;margin:0;padding:9px 10px;font-size:17px;letter-spacing:.3px;line-height:1.15;white-space:normal;text-align:left;gap:7px}
+  .garage-actions #commit>span{font-size:18px;flex-shrink:0}
+  .garage-actions .configuration-bill{grid-column:2;grid-row:1;min-width:0;width:100%;border:0;margin:0;padding:0;gap:2px}
+  .garage-actions .configuration-bill>div{min-height:16px;gap:4px;font-size:9px;white-space:nowrap}
+  .garage-actions .configuration-bill strong{font-size:17px;line-height:1.05}.garage-actions .configuration-bill b{font-size:12px;line-height:1.1}
+  .garage-actions .bill-label-full{display:none}.garage-actions .bill-label-mobile{display:inline;font-size:9px;color:#aab7c2}
+  .garage-actions .budget-warning{grid-column:1 / -1;grid-row:2;font-size:10px;margin:0}
 }
