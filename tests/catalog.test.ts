@@ -18,7 +18,7 @@ test('every exposed combination stays internally consistent and prices each equi
   assert.equal(transportMass({...DEFAULT_CONFIG,crawler:true},24)-transportMass(DEFAULT_CONFIG,24),CRAWLER_SPEC.addedMass);
 });
 test('price recalibration preserves saved money and the same owned truck',()=>{
-  const career={...freshCareer(),funds:177000};let data='';const storage={getItem:()=>data,setItem:(_k:string,v:string)=>{data=v;}};
+  const career={...freshCareer(),ownsTruck:true,funds:177000};let data='';const storage={getItem:()=>data,setItem:(_k:string,v:string)=>{data=v;}};
   saveCareer(career,storage);const loaded=loadCareer(storage);assert.deepEqual(loaded,career);
   const upgrade={...loaded.truck,engine:'D17A780' as const};assert.equal(buyConfiguration(loaded,upgrade)!.funds,57000);
   assert.equal(priceFor(DEFAULT_CONFIG),1168000);

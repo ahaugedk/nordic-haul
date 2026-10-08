@@ -34,6 +34,8 @@ Krydstjek: 780 XL 4×2 med alle spillets tilvalg giver 1.262.000 kr. Det er cirk
 
 Samlet usikkerhed cirka ±15–20 %, særtilvalg cirka ±30–40 %; intervallerne er ikke statistiske konfidensintervaller. Dansk levering/registrering, serviceaftale, finansiering og sættevogn er ikke medtaget i lastbilprisen. Pakkeafhængigheder kan påvirke faktiske tilbud.
 
-Standardtrucken (600 hk, Globetrotter, 6×4 High, metallic) er **1.168.000 kr.** Ny karriere beholder startkapitalen 1.400.000 kr. og har 232.000 kr. tilbage. Allerede gemte penge og ejede konfigurationer ændres ikke. Fremtidige køb og nedgraderinger beregnes med den nye pristrappe.
+Standardtrucken (600 hk, Globetrotter, 6×4 High, metallic) er **1.168.000 kr.** En ny karriere starter med hele startkapitalen på **1.400.000 kr.**, uden at eje en truck. Den valgte truck betales først ved “Køb truck & videre”; standardtrucken efterlader **232.000 kr.** til senere ombygninger. Det fulde købsbeløb skal kunne dækkes af startbudgettet. Efter købet afregnes kun konfigurationsforskellen, og et identisk setup opkræves ikke igen.
+
+Gemte, etablerede karrierer bevarer truck, penge og resultater. Gamle, urørte startsaves med standardtrucken og præcis 177.000 kr. (tidligere prisgrundlag) eller 232.000 kr. (nuværende prisgrundlag) får den automatiske startbetaling tilbageført og følger nu første købsflow. Lagringsnøglen er uændret; version 2 gemmer eksplicit, om trucken er købt.
 
 Ombygning afregnes fortsat som forskellen mellem konfigurationer, inklusive fuld kreditering ved nedgradering. Det er en spilmekanik, ikke et udsagn om motor-/førerhusombygninger, arbejdsomkostninger eller brugtpriser.
