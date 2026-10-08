@@ -8,6 +8,7 @@ import { buildTrailer } from './trailerModel';
 import { mirrorSurfaceUV,orientMirrorFeed } from './mirrorSurface';
 import type { RaceSnapshot } from './simulation';
 import { RIVALS } from './raceField';
+import { isMobileLayout } from './mobileLayout';
 
 export class TruckScene {
   engine:Engine|WebGPUEngine;scene:Scene;garage:TransformNode;motorway:TransformNode;
@@ -233,6 +234,7 @@ export class TruckScene {
     this.scene.imageProcessingConfiguration.contrast=enabled?1.12:1;
     if(enabled){this.orbit.detachControl();this.cockpit.position.set(.02,3.08+Math.min(0,this.currentCab)*.7+this.chassisDrop,.43);this.cockpit.fov=this.inspectionFov();this.cockpit.rotation.set(.38,.01,0);this.scene.activeCamera=this.cockpit;this.cockpit.attachControl(this.canvas,true);this.cockpit.inputs.removeByType('FreeCameraKeyboardMoveInput');}
     else{this.cockpit.detachControl();this.scene.activeCamera=this.orbit;this.orbit.attachControl(this.canvas,true);}
+    this.refreshMobileLayout();
   }
   private drawDisplays(speed:number,elapsed:number,progress:number){
     if(!this.instruments||!this.navigation)return;
@@ -284,15 +286,34 @@ export class TruckScene {
     const bob=Math.sin(s.elapsed*9)*Math.min(s.speed/1000,.018);
     const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.cockpit.position.y+=reducedMotion?0:bob;this.cockpit.rotation.set(.12+s.pitch,s.yaw,0);
-    this.cockpit.fov=1.12+(reducedMotion?0:Math.min(s.speed/33.3,1)*.14);
+    this.cockpit.fov=(isMobileLayout()&&innerHeight>innerWidth?1.6:1.12)+(reducedMotion?0:Math.min(s.speed/33.3,1)*.14);
     for(const m of this.truck.getChildMeshes())if(m.name.startsWith('steering_assembly'))m.rotationQuaternion=Quaternion.RotationAxis(new Vector3(0,-.60,.80),-s.steering*.75);
     for(const mirror of this.mirrors){const side=mirror.side;mirror.camera.position.set(s.x+side*1.44*cos+2.5*sin,s.y+3.3,s.z-side*1.44*sin+2.5*cos);mirror.camera.rotation.set(.08-s.pitch,s.yaw+Math.PI-side*.14,0);}
     this.displayTick+=1;if(this.displayTick%6===0)this.drawDisplays(s.speed,s.elapsed,s.progress);
   }
   start(callback:(dt:number)=>void){this.engine.runRenderLoop(()=>{const dt=Math.min(this.engine.getDeltaTime()/1000,.1);this.elapsed+=dt;callback(dt);this.scene.render();this.canvas.dataset.fps=Math.round(this.engine.getFps()).toString();if(this.elapsed>5&&!document.hidden)this.slowFrames=dt>.04?this.slowFrames+1:Math.max(0,this.slowFrames-2);if(this.slowFrames>180&&this.quality==='balanced'){this.quality='performance';this.engine.setHardwareScalingLevel(Math.max(1.2,window.devicePixelRatio/1.2));this.shadow.getShadowMap()!.resize(512);}});}
   private inspectionFov(){return Math.max(1.02,Math.min(1.5,2*Math.atan(Math.tan(.80)/(innerWidth/innerHeight))));}
+  refreshMobileLayout(){if(isMobileLayout())this.layoutCamera();}
   private layoutCamera(){
     if(!this.orbit)return;
+    if(isMobileLayout()){
+      const stage=this.mode==='garage'?document.querySelector<HTMLElement>('.garage-stage'):null;
+      if(stage){
+        const r=stage.getBoundingClientRect(),top=r.top+48,height=Math.max(60,r.height-54);
+        for(const camera of [this.orbit,this.cockpit]){camera.viewport.x=r.left/innerWidth;camera.viewport.width=r.width/innerWidth;camera.viewport.y=(innerHeight-top-height)/innerHeight;camera.viewport.height=height/innerHeight;}
+        this.orbit.lowerRadiusLimit=6;this.orbit.upperRadiusLimit=14;
+        const fit=Math.max(8.4,9*height/r.width);
+        if(!this.compactLayout||Math.abs(this.orbit.target.y-1.85)>.01)this.orbit.radius=fit;
+        this.orbit.target.set(0,1.85,0);
+        if(this.interiorMode)this.cockpit.fov=Math.max(1.02,Math.min(1.7,2*Math.atan(Math.tan(.8)/(r.width/height))));
+      }else{
+        this.orbit.viewport.x=0;this.orbit.viewport.y=0;this.orbit.viewport.width=1;this.orbit.viewport.height=1;
+        this.cockpit.viewport.x=0;this.cockpit.viewport.y=0;this.cockpit.viewport.width=1;this.cockpit.viewport.height=1;
+      }
+      this.compactLayout=true;return;
+    }
+    this.orbit.lowerRadiusLimit=9;
+    this.cockpit.viewport.x=0;this.cockpit.viewport.y=0;this.cockpit.viewport.width=1;this.cockpit.viewport.height=1;
     if(this.interiorMode)this.cockpit.fov=this.inspectionFov();
     this.orbit.viewport.x=0;this.orbit.viewport.width=innerWidth>=800&&this.mode==='garage'?.77:1;
     if(innerWidth<800){this.compactLayout=true;this.orbit.target.set(0,1.6,0);this.orbit.radius=15;this.orbit.viewport.y=this.mode==='garage'?.34:0;this.orbit.viewport.height=this.mode==='garage'?.66:1;}

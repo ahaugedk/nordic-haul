@@ -71,3 +71,7 @@ The larger hill profile is shared by road, terrain, guardrails, truck camera and
 ## Garage information and catalog audit
 
 The `VOLVO-INFO` card beside the garage's hp/Nm/gear figures follows the last selected component. It covers engine operating ranges, the linked I-Shift, ASO-C crawler data, cab heights, axle layout, mirrors, lights, interior and paint, with an official Volvo link for each. On small screens it opens as a compact details panel. The catalog was rechecked on 8 October 2026; the audit and price-calibration documents record sources and unresolved full-order dependencies. Pricing labels in the UI are ordinary game prices excluding VAT. Existing wallet balances and owned configurations survive the recalibration.
+
+## Mobile layout
+
+Phone styles are isolated in `src/mobile.css` at widths below 800 px, plus coarse-pointer phones in short landscape viewports. Desktop component positions are unchanged. The garage has a measured 3D preview area above a fixed configuration panel; options and Volvo information scroll inside it while budget and purchase stay visible. Routes use a compact map and horizontally swipeable cards, with payload and reward available on the same screen. Racing separates telemetry, radio and four thumb controls, with a wider portrait view and safe-area spacing. Landscape uses a side-by-side garage and separate control clusters. Interior preview can hide the configuration panel for more viewing space.
