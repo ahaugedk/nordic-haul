@@ -8,12 +8,17 @@ export function loadCareer(storage:Pick<Storage,'getItem'>=localStorage):Career 
     const v=JSON.parse(storage.getItem(key)??'null');
     if((v?.version===1||v?.version===2)&&validConfig(v.truck)&&[v.funds,v.races,v.wins,v.earned].every(x=>Number.isFinite(x)&&x>=0)){
       const currentCity=CITIES.some(c=>c.id===v.currentCity)?v.currentCity:'aarhus';
-      if(v.version===2&&typeof v.ownsTruck==='boolean')return {...v,currentCity};
+      if(v.version===2&&typeof v.ownsTruck==='boolean'){
+        // An unspent initial grant follows the current balance; purchased trucks
+        // and earned funds are never taken away by a start-budget adjustment.
+        const unstarted=!v.ownsTruck&&v.races===0&&v.wins===0&&v.earned===0&&currentCity==='aarhus';
+        return {...v,funds:unstarted?START_FUNDS:v.funds,currentCity};
+      }
       if(v.version===1){
         // Earlier releases charged the default truck on first load. Undo only
         // the known untouched starting saves; preserve all established careers.
         const untouched=v.races===0&&v.wins===0&&v.earned===0&&currentCity==='aarhus'
-          &&[177000,START_FUNDS-priceFor(DEFAULT_CONFIG)].includes(v.funds)
+          &&[177000,232000].includes(v.funds)
           &&Object.entries(DEFAULT_CONFIG).every(([field,value])=>v.truck[field]===value);
         if(untouched)return freshCareer();
         return {...v,version:2,ownsTruck:true,currentCity};

@@ -5,7 +5,7 @@ import { freshCareer,buyConfiguration,settleRace,loadCareer,saveCareer,upgradeCo
 test('starting capital includes the truck and the chosen truck is paid for only once',()=>{
   const career=freshCareer();
   assert.equal(career.funds,START_FUNDS);assert.equal(career.ownsTruck,false);
-  const draft={...career.truck,engine:'D17A780' as const,cms:true};
+  const draft={...career.truck,cms:true};
   assert.equal(upgradeCost(career,draft),priceFor(draft));
   const bought=buyConfiguration(career,draft)!;
   assert.equal(bought.funds,START_FUNDS-priceFor(draft));assert.equal(bought.ownsTruck,true);
@@ -13,15 +13,43 @@ test('starting capital includes the truck and the chosen truck is paid for only 
   assert.deepEqual(buyConfiguration(bought,draft),bought);
   assert.equal(buyConfiguration({...career,funds:priceFor(draft)-1},draft),null);
   assert.equal(buyConfiguration({...career,funds:priceFor(draft)},draft)!.funds,0);
-  assert.equal(buyConfiguration(career,DEFAULT_CONFIG)!.funds,232000);
+  assert.equal(buyConfiguration(career,DEFAULT_CONFIG)!.funds,32000);
 });
 test('after purchase an upgrade deducts only the configuration difference and refuses debt',()=>{
-  const career=buyConfiguration(freshCareer(),DEFAULT_CONFIG)!,upgrade={...career.truck,engine:'D17A780' as const};
+  const starter=buyConfiguration(freshCareer(),DEFAULT_CONFIG)!;
+  const career=settleRace(settleRace(starter,42000,1,true).career,42000,1,true).career,upgrade={...career.truck,engine:'D17A780' as const};
   const bought=buyConfiguration(career,upgrade)!;
   assert.equal(bought.funds,career.funds-120000);
   assert.equal(career.truck.engine,'D17A600');
   assert.equal(buyConfiguration({...career,funds:100},upgrade),null);
   const back=buyConfiguration(bought,career.truck)!;assert.equal(back.funds,career.funds);
+});
+test('the standard start forces equipment choices and engines unlock through race earnings',()=>{
+  const c=freshCareer(),starter=buyConfiguration(c,DEFAULT_CONFIG)!;
+  assert.equal(c.funds,1200000);assert.equal(starter.funds,32000);
+  const flags=['crawler','cms','adaptiveLights','blackEdition'] as const;
+  let maxExtras=0;
+  for(let mask=0;mask<16;mask++){
+    const draft={...DEFAULT_CONFIG};flags.forEach((key,i)=>draft[key]=!!(mask&(1<<i)));
+    if(buyConfiguration(c,draft))maxExtras=Math.max(maxExtras,flags.filter(key=>draft[key]).length);
+  }
+  assert.equal(maxExtras,2,'A standard starter cannot buy nearly every add-on');
+  const motor700={...DEFAULT_CONFIG,engine:'D17A700' as const},motor780={...DEFAULT_CONFIG,engine:'D17A780' as const};
+  assert.equal(buyConfiguration(c,motor700),null);assert.equal(buyConfiguration(c,motor780),null);
+  const win=settleRace(starter,42000,1,true).career;
+  assert.ok(buyConfiguration(win,motor700));assert.equal(buyConfiguration(win,motor780),null);
+  assert.ok(buyConfiguration(settleRace(win,42000,1,true).career,motor780));
+  assert.ok(buyConfiguration(c,{...DEFAULT_CONFIG,axle:'4x2',engine:'D17A780'}),'A cheaper chassis remains a valid funding trade-off');
+});
+test('old unspent initial grants are rebalanced while purchased and progressed careers retain their funds',()=>{
+  const unstarted={...freshCareer(),funds:1400000,truck:{...DEFAULT_CONFIG,cms:true}};
+  const load=(c:object)=>loadCareer({getItem:()=>JSON.stringify(c)});
+  assert.deepEqual(load(unstarted),{...unstarted,funds:1200000});
+  for(const c of [
+    {...unstarted,ownsTruck:true,funds:232000},
+    {...unstarted,ownsTruck:true,funds:87000,truck:{...DEFAULT_CONFIG,engine:'D17A780' as const,cms:true}},
+    {...unstarted,ownsTruck:true,races:2,earned:100000,funds:332000},
+  ])assert.deepEqual(load(c),c);
 });
 test('placing and time bonus settle once through an immutable career update',()=>{
   const c=buyConfiguration(freshCareer(),DEFAULT_CONFIG)!,paid=settleRace(c,42000,2,true);

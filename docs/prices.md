@@ -34,8 +34,14 @@ Krydstjek: 780 XL 4×2 med alle spillets tilvalg giver 1.262.000 kr. Det er cirk
 
 Samlet usikkerhed cirka ±15–20 %, særtilvalg cirka ±30–40 %; intervallerne er ikke statistiske konfidensintervaller. Dansk levering/registrering, serviceaftale, finansiering og sættevogn er ikke medtaget i lastbilprisen. Pakkeafhængigheder kan påvirke faktiske tilbud.
 
-Standardtrucken (600 hk, Globetrotter, 6×4 High, metallic) er **1.168.000 kr.** En ny karriere starter med hele startkapitalen på **1.400.000 kr.**, uden at eje en truck. Den valgte truck betales først ved “Køb truck & videre”; standardtrucken efterlader **232.000 kr.** til senere ombygninger. Det fulde købsbeløb skal kunne dækkes af startbudgettet. Efter købet afregnes kun konfigurationsforskellen, og et identisk setup opkræves ikke igen.
+Standardtrucken (600 hk, Globetrotter, 6×4 High, metallic) er **1.168.000 kr.** En ny karriere starter med hele startkapitalen på **1.200.000 kr.**, uden at eje en truck. Den valgte truck betales først ved “Køb truck & videre”; standardtrucken efterlader **32.000 kr.** til senere ombygninger. Det fulde købsbeløb skal kunne dækkes af startbudgettet. Efter købet afregnes kun konfigurationsforskellen, og et identisk setup opkræves ikke igen.
 
-Gemte, etablerede karrierer bevarer truck, penge og resultater. Gamle, urørte startsaves med standardtrucken og præcis 177.000 kr. (tidligere prisgrundlag) eller 232.000 kr. (nuværende prisgrundlag) får den automatiske startbetaling tilbageført og følger nu første købsflow. Lagringsnøglen er uændret; version 2 gemmer eksplicit, om trucken er købt.
+Gemte, etablerede karrierer bevarer truck, penge og resultater. Gamle, urørte startsaves med standardtrucken og præcis 177.000 kr. (tidligere prisgrundlag) eller 232.000 kr. (det tidligere startbudget) får den automatiske startbetaling tilbageført og følger nu første købsflow. Lagringsnøglen er uændret; version 2 gemmer eksplicit, om trucken er købt.
 
 Ombygning afregnes fortsat som forskellen mellem konfigurationer, inklusive fuld kreditering ved nedgradering. Det er en spilmekanik, ikke et udsagn om motor-/førerhusombygninger, arbejdsomkostninger eller brugtpriser.
+
+## Startbalance
+
+Startkapitalen er sænket fra 1.400.000 til 1.200.000 kr. Standardtrucken efterlader 32.000 kr.; de fire små udstyrstilvalg koster samlet 74.000 kr. og kan derfor ikke alle købes på standardtrucken fra start. Man kan vælge fx CMS (25.000 kr.), krybegear (22.000 kr.) eller kombinere adaptive LED og Black Edition (27.000 kr.). 700 hk (+70.000 kr.) kræver cirka én god levering, mens 780 hk (+120.000 kr.) kræver cirka to, hvis man beholder sit startoverskud. Svagere placeringer eller andre tilvalg forlænger opsparingen.
+
+De fabrikantbaserede muligheder, lastbilpriser og løbspræmier er uændrede. Et billigere chassis/førerhus kan fortsat finansiere mere motor og udstyr; det er et bevidst konfigurationsvalg. Gemte version-2-karrierer, hvor første truck endnu ikke er købt og ingen løb er kørt, får det nye startbeløb ved indlæsning. Allerede købte trucks, pengesaldi og løbsresultater bevares.

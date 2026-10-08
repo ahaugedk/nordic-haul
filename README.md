@@ -98,3 +98,7 @@ Each route ends at a destination-labelled logistics terminal: twelve numbered un
 The warehouse remains level on a terraced apron. Local terrain is lowered beneath the yard without modifying either carriageway, and houses/roof overhangs/tree crowns are excluded from every supported terminal footprint. Shared facade materials batch small details for laptop/mobile performance. Yard lights, green dock indicators, office glazing and two floodlights follow the existing day/night cycle. A separate arrival camera shows the yard behind the result screen, and the existing driving camera returns for the next race. Vehicle geometry is unchanged.
 
 Development-only `?terminalPreview=day`, `night` and `overview` fixtures exercise the real route endpoint and renderer for visual QA. Their setup is removed from production builds.
+
+## Starting-budget balance
+
+New careers receive DKK 1,200,000 including the first truck. The default DKK 1,168,000 setup leaves DKK 32,000: at most two of its four optional equipment add-ons. Keeping this reserve, one strong delivery can fund the 700 hp upgrade and two can fund 780 hp. Catalog prices and payouts are unchanged; cheaper chassis/cab choices remain valid ways to afford more engine or equipment. Unspent pre-purchase grants adopt the new balance on reload. Purchased trucks and established career balances remain intact.
