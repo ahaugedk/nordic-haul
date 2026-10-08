@@ -15,6 +15,7 @@ import { DispatchAudio } from './game/dispatchAudio';
 import { selectedPartInfo,type SelectedPart } from './game/selectionInfo';
 import { FIELD_SIZE,RIVALS } from './game/raceField';
 import { isMobileLayout } from './game/mobileLayout';
+import { prepareImpactPreview } from './game/impactPreview';
 
 const app=document.querySelector<HTMLDivElement>('#app')!;
 const canvas=document.querySelector<HTMLCanvasElement>('#scene')!;
@@ -25,10 +26,12 @@ let mode:'garage'|'tenders'|'race'|'results'='garage',section='motor';
 let chosen:TravelTender=tendersFrom(career.currentCity)[0],sim:Simulation|undefined,view:TruckScene;
 let result:{payout:number;bonus:number;place:number;time:number}|undefined;
 let showSources=false,accumulator=0,hudTime=0;
-let lastCountdownCue=-1;let lastRenderedMode:string|undefined;let lastSelectedPart:SelectedPart='engine';
+let lastCountdownCue=-1,lastImpactCue=0;let lastRenderedMode:string|undefined;let lastSelectedPart:SelectedPart='engine';
 const input:Controls={throttle:false,brake:false,left:false,right:false};
 const audio=new EngineAudio();
 const dispatchAudio=new DispatchAudio();
+const impactPreview=import.meta.env.DEV?new URLSearchParams(location.search).get('impactPreview'):null;
+let impactPreviewFrames=0;
 dispatchAudio.onStateChange=()=>syncAudioControls();
 let soundEnabled=true;
 const raceMusic=new RaceMusic();
@@ -93,7 +96,9 @@ function commit(){const c=buyConfiguration(career,draft);if(!c)return false;care
 function goGarage(){raceMusic.stop();sim?.dispose();sim=undefined;mode='garage';draft={...career.truck};chosen=tendersFrom(career.currentCity)[0];view.configure(draft);view.setMode('garage');clearInputs();render();}
 async function startRace(){
   if(!career.ownsTruck)return;
-  raceMusic.start();playUI(()=>dispatchAudio.depart());lastCountdownCue=-1;mode='race';clearInputs();sim?.dispose();sim=new Simulation(career.truck,chosen);accumulator=0;view.setRoute(cityFor(chosen.origin).name,cityFor(chosen.destination).name);view.setMode('race');view.updateRace(sim.snapshot());render();updateHUD(sim.snapshot());
+  raceMusic.start();playUI(()=>dispatchAudio.depart());lastCountdownCue=-1;lastImpactCue=0;mode='race';clearInputs();sim?.dispose();sim=new Simulation(career.truck,chosen);
+  if(import.meta.env.DEV&&impactPreview){prepareImpactPreview(sim,impactPreview);impactPreviewFrames=0;}
+  accumulator=0;view.setRoute(cityFor(chosen.origin).name,cityFor(chosen.destination).name);view.setMode('race');view.updateRace(sim.snapshot());render();updateHUD(sim.snapshot());
   if(soundEnabled)void unlockAudio().catch(()=>{});
 }
 function pause(){
@@ -171,6 +176,8 @@ try{
     if(mode==='race'&&sim){
       accumulator+=dt;while(accumulator>=1/60){sim.step(input);accumulator-=1/60;}
       const s=sim.snapshot();view.updateRace(s);audio.update(s.speed,input.throttle,soundEnabled&&!sim.paused&&s.countdown<=0);
+      if(import.meta.env.DEV&&impactPreview&&Number(canvas.dataset.sparks)>0&&++impactPreviewFrames>10&&s.impacts.length){sim.paused=true;raceMusic.pause();}
+      for(const hit of s.impacts)if(hit.id>lastImpactCue){lastImpactCue=hit.id;if(soundEnabled)dispatchAudio.impact(hit.strength);}
       hudTime+=dt;if(hudTime>.08){updateHUD(s);hudTime=0;}
       if(s.done){const paid=settleRace(career,chosen.reward,s.place,s.elapsed<=chosen.par,chosen.destination);career=paid.career;saveCareer(career);result={payout:paid.payout,bonus:paid.bonus,place:s.place,time:s.elapsed};mode='results';raceMusic.stop();audio.update(0,false,false);dispatchAudio.victory(s.place===1);render();}
     }else audio.update(0,false,false);

@@ -4,13 +4,16 @@ import { TRACK_LENGTH,TRACK,ROAD_HALF_WIDTH,atDistance,nearestTrack,RaceProgress
 import { accelerationFor,MAX_SPEED,transportMass } from './drivetrain';
 import { trailerPose,towRotation,type TrailerPose } from './trailer';
 import { GRID_ORIGIN,RIVALS,startingGrid } from './raceField';
+import { collisionPenalty,type Impact,type ImpactKind } from './impacts';
 export type Controls={throttle:boolean;brake:boolean;left:boolean;right:boolean};
-export type RaceSnapshot={speed:number;steering:number;elapsed:number;progress:number;place:number;startRow:number;offRoad:boolean;countdown:number;done:boolean;x:number;y:number;z:number;yaw:number;pitch:number;grade:number;ai:{x:number;y:number;z:number;yaw:number;pitch:number;trailer:TrailerPose}[]};
+export type RaceSnapshot={speed:number;steering:number;elapsed:number;progress:number;place:number;startRow:number;offRoad:boolean;countdown:number;done:boolean;x:number;y:number;z:number;yaw:number;pitch:number;grade:number;impacts:Impact[];ai:{x:number;y:number;z:number;yaw:number;pitch:number;trailer:TrailerPose}[]};
 export class Simulation {
   world:RAPIER.World;body:RAPIER.RigidBody;aiBodies:RAPIER.RigidBody[]=[];aiTrailerBodies:RAPIER.RigidBody[]=[];
   elapsed=0;countdown=3;speed=0;yaw=0;steering=0;progress=new RaceProgress();paused=false;done=false;
   aiDistances:number[];aiSpeeds:number[];target:number;readonly grid:ReturnType<typeof startingGrid>;
   private rivals:TruckConfig[];
+  private colliderKinds=new Map<number,{key:string;kind:ImpactKind}>();private contactTimes=new Map<string,number>();private sparkTimes=new Map<string,number>();
+  private impacts:Impact[]=[];private nextImpactId=1;
   constructor(public truck:TruckConfig,public tender:Tender,random:()=>number=Math.random){
     this.world=new RAPIER.World({x:0,y:0,z:0});this.world.timestep=1/60;this.target=TRACK_LENGTH*tender.distance;
     this.grid=startingGrid(random);this.rivals=RIVALS.map(r=>({...truck,engine:r.engine}));
@@ -22,10 +25,10 @@ export class Simulation {
     for(let i=0;i<RIVALS.length;i++){
       const distance=this.aiDistances[i]+GRID_ORIGIN,lane=this.grid.rivals[i].lane,p=atDistance(distance,lane);
       const b=this.world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(p.x,p.y+1.9,p.z));
-      this.world.createCollider(RAPIER.ColliderDesc.cuboid(1.22,1.6,3.6),b);this.aiBodies.push(b);
+      const cabCollider=this.world.createCollider(RAPIER.ColliderDesc.cuboid(1.22,1.6,3.6),b);this.colliderKinds.set(cabCollider.handle,{key:'rival '+i,kind:'truck'});this.aiBodies.push(b);
       const trailer=trailerPose(distance,lane);
       const tb=this.world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(trailer.x,trailer.y,trailer.z).setRotation(towRotation(trailer.yaw,trailer.pitch)));
-      this.world.createCollider(RAPIER.ColliderDesc.cuboid(1.275,1.3,6.8).setTranslation(0,2.71,0).setFriction(.12),tb);this.aiTrailerBodies.push(tb);
+      const trailerCollider=this.world.createCollider(RAPIER.ColliderDesc.cuboid(1.275,1.3,6.8).setTranslation(0,2.71,0).setFriction(.12),tb);this.colliderKinds.set(trailerCollider.handle,{key:'rival '+i,kind:'trailer'});this.aiTrailerBodies.push(tb);
     }
     // Fixed guardrails prevent cutting across the median or into buildings.
     for(let i=0;i<TRACK.length-1;i+=3){
@@ -72,21 +75,62 @@ export class Simulation {
       this.aiBodies[i].setNextKinematicRotation({x:0,y:Math.sin(p.yaw/2),z:0,w:Math.cos(p.yaw/2)});
       const trailer=trailerPose(distance,lane);this.aiTrailerBodies[i].setNextKinematicTranslation(trailer);this.aiTrailerBodies[i].setNextKinematicRotation(towRotation(trailer.yaw,trailer.pitch));
     }
+    const speedBefore=this.speed,vx=Math.sin(this.yaw)*speedBefore,vz=Math.cos(this.yaw)*speedBefore;
     this.world.step();
     const actual=this.body.linvel();this.speed=Math.max(0,actual.x*Math.sin(this.yaw)+actual.z*Math.cos(this.yaw));
+    this.applyCollisions(speedBefore,vx,vz,dt);
     const n=nearestTrack(this.body.translation().x,this.body.translation().z);
     this.body.setTranslation({x:this.body.translation().x,y:n.y+1.9,z:this.body.translation().z},true);
     this.progress.advance(n.s,n.distance<ROAD_HALF_WIDTH);
     if(this.progress.validatedDistance>=this.target)this.done=true;
   }
+  private applyCollisions(speedBefore:number,vx:number,vz:number,dt:number){
+    type Contact={key:string;kind:ImpactKind;closing:number;tangent:number;x:number;y:number;z:number;nx:number;nz:number};
+    const contacts=new Map<string,Contact>(),player=this.body.collider(0),position=this.body.translation();
+    this.world.contactPairsWith(player,other=>{
+      const identity=this.colliderKinds.get(other.handle)??{key:'guardrail',kind:'guardrail' as const};
+      this.world.contactPair(player,other,manifold=>{
+        let point:RAPIER.Vector|null=null,score=-Infinity;
+        for(let i=0;i<manifold.numSolverContacts();i++)if(manifold.solverContactDist(i)<=.03){
+          const p=manifold.solverContactPoint(i);if(!p)continue;
+          const visibleScore=p.y+((p.x-position.x)*Math.sin(this.yaw)+(p.z-position.z)*Math.cos(this.yaw))*.12;
+          if(visibleScore>score){point={...p};score=visibleScore;}
+        }
+        if(!point)return;
+        const normal=manifold.normal(),length=Math.hypot(normal.x,normal.z);if(length<.2)return;
+        let nx=normal.x/length,nz=normal.z/length;
+        const center=other.translation();if(nx*(position.x-center.x)+nz*(position.z-center.z)<0){nx=-nx;nz=-nz;}
+        const velocity=other.parent()?.velocityAtPoint(point)??{x:0,y:0,z:0},rx=vx-velocity.x,rz=vz-velocity.z;
+        const along=rx*nx+rz*nz,closing=Math.max(0,-along),tangent=Math.sqrt(Math.max(0,rx*rx+rz*rz-along*along));
+        if(closing<.4&&tangent<1)return;
+        const contact={...identity,closing,tangent,x:point.x,y:point.y,z:point.z,nx,nz};
+        const old=contacts.get(identity.key);if(!old||closing+tangent*.1>old.closing+old.tangent*.1)contacts.set(identity.key,contact);
+      });
+    });
+    let loss=0;
+    for(const contact of contacts.values()){
+      const fresh=this.elapsed-(this.contactTimes.get(contact.key)??-Infinity)>.16;this.contactTimes.set(contact.key,this.elapsed);
+      const penalty=collisionPenalty(speedBefore,contact.closing,contact.tangent,fresh,dt);loss=Math.max(loss,penalty);
+      if(this.elapsed-(this.sparkTimes.get(contact.key)??-Infinity)>=.12){
+        this.sparkTimes.set(contact.key,this.elapsed);
+        this.impacts.push({id:this.nextImpactId++,time:this.elapsed,kind:contact.kind,x:contact.x,y:contact.y,z:contact.z,nx:contact.nx,nz:contact.nz,strength:Math.min(1,.15+contact.closing/18+contact.tangent/120),speedLost:Math.max(penalty,speedBefore-this.speed)});
+      }
+    }
+    if(contacts.size){
+      this.speed=Math.max(0,Math.min(this.speed,speedBefore-loss));
+      this.body.setLinvel({x:Math.sin(this.yaw)*this.speed,y:0,z:Math.cos(this.yaw)*this.speed},true);
+    }
+    this.impacts=this.impacts.filter(i=>this.elapsed-i.time<1);
+  }
   resetToRoad(){
+    this.impacts=[];this.contactTimes.clear();this.sparkTimes.clear();
     const p=atDistance(GRID_ORIGIN+Math.max(0,this.progress.validatedDistance),0);
     this.body.setTranslation({x:p.x,y:p.y+1.9,z:p.z},true);this.body.setLinvel({x:0,y:0,z:0},true);this.speed=0;this.yaw=p.yaw;this.steering=0;this.progress.last=nearestTrack(p.x,p.z).s;
   }
   snapshot():RaceSnapshot{
     const p=this.body.translation(),n=nearestTrack(p.x,p.z),frame=atDistance(n.s),alignment=Math.sin(this.yaw)*frame.tx+Math.cos(this.yaw)*frame.tz;
     const initial=this.grid.player.distance-GRID_ORIGIN;
-    return {speed:this.speed,steering:this.steering,elapsed:this.elapsed,progress:Math.min(1,Math.max(0,(this.progress.validatedDistance-initial)/(this.target-initial))),place:1+this.aiDistances.filter(x=>x>this.progress.validatedDistance).length,startRow:this.grid.player.row,offRoad:n.distance>7.5,countdown:this.countdown,done:this.done,x:p.x,y:n.y,z:p.z,yaw:this.yaw,pitch:-Math.atan(n.grade*alignment),grade:n.grade*alignment,ai:this.aiDistances.map((s,i)=>{const distance=s+GRID_ORIGIN,lane=this.grid.rivals[i].lane;return {...atDistance(distance,lane),trailer:trailerPose(distance,lane)};})};
+    return {speed:this.speed,steering:this.steering,elapsed:this.elapsed,progress:Math.min(1,Math.max(0,(this.progress.validatedDistance-initial)/(this.target-initial))),place:1+this.aiDistances.filter(x=>x>this.progress.validatedDistance).length,startRow:this.grid.player.row,offRoad:n.distance>7.5,countdown:this.countdown,done:this.done,x:p.x,y:n.y,z:p.z,yaw:this.yaw,pitch:-Math.atan(n.grade*alignment),grade:n.grade*alignment,impacts:this.impacts.map(i=>({...i})),ai:this.aiDistances.map((s,i)=>{const distance=s+GRID_ORIGIN,lane=this.grid.rivals[i].lane;return {...atDistance(distance,lane),trailer:trailerPose(distance,lane)};})};
   }
   dispose(){this.world.free();}
 }

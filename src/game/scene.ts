@@ -9,6 +9,7 @@ import { mirrorSurfaceUV,orientMirrorFeed } from './mirrorSurface';
 import type { RaceSnapshot } from './simulation';
 import { RIVALS } from './raceField';
 import { isMobileLayout,isAppleMobile,previewFrame } from './mobileLayout';
+import { CollisionSparks } from './collisionSparks';
 
 export class TruckScene {
   engine:Engine|WebGPUEngine;scene:Scene;garage:TransformNode;motorway:TransformNode;
@@ -23,10 +24,12 @@ export class TruckScene {
   private destination='Hamburg';private origin='Aarhus';private interiorMode=false;
   private compactLayout=false;
   private stageObserver?:ResizeObserver;private observedStage?:HTMLElement;private mobileFrame='';
+  private sparks:CollisionSparks;
   private skyMaterial?:ShaderMaterial;private headlights:SpotLight[]=[];private streetLights:PointLight[]=[];
   private lampPositions:Vector3[]=[];private nightMaterials:{material:PBRMaterial;color:Color3}[]=[];
   private constructor(engine:Engine|WebGPUEngine,public canvas:HTMLCanvasElement,backend:string){
     this.engine=engine;this.backend=backend;this.scene=new Scene(engine);this.scene.clearColor=new Color4(.035,.045,.06,1);
+    this.sparks=new CollisionSparks(this.scene);
     this.scene.fogMode=Scene.FOGMODE_EXP2;this.scene.fogColor=new Color3(.68,.73,.74);this.scene.fogDensity=.0011;
     this.scene.imageProcessingConfiguration.exposure=1;this.scene.imageProcessingConfiguration.toneMappingEnabled=true;
     const hemi=new HemisphericLight('soft ambient',new Vector3(0,1,0),this.scene);hemi.intensity=.58;hemi.groundColor=new Color3(.19,.2,.22);
@@ -265,6 +268,7 @@ export class TruckScene {
     const trim=this.scene.getMaterialByName('trim') as PBRMaterial;if(trim)trim.albedoColor=Color3.FromHexString(c.blackEdition?'#131820':'#293036').toLinearSpace();
   }
   setMode(mode:'garage'|'race'){
+    this.sparks.reset();
     for(const mirror of this.opticalMirrors)mirror.mesh.material=mode==='race'?mirror.feed:mirror.original;
     this.mode=mode;this.garage.setEnabled(mode==='garage');this.motorway.setEnabled(mode==='race');[...this.opponents,...this.opponentTrailers].forEach(x=>x.setEnabled(mode==='race'));
     this.scene.imageProcessingConfiguration.contrast=1;
@@ -280,6 +284,8 @@ export class TruckScene {
     this.layoutCamera();
   }
   updateRace(s:RaceSnapshot){
+    this.sparks.update(s);
+    this.canvas.dataset.lastImpact=s.impacts.at(-1)?.kind??'';
     this.truck.position.set(s.x,s.y,s.z);this.truck.rotation.set(s.pitch,s.yaw,0);this.updateDaylight(s.elapsed,s.x,s.z);
     for(let i=0;i<s.ai.length;i++){this.opponents[i].position.set(s.ai[i].x,s.ai[i].y,s.ai[i].z);this.opponents[i].rotation.set(s.ai[i].pitch,s.ai[i].yaw,0);const t=s.ai[i].trailer;this.opponentTrailers[i].position.set(t.x,t.y,t.z);this.opponentTrailers[i].rotation.set(t.pitch,t.yaw,0);}
     const local=new Vector3(-.65,3.07+Math.min(0,this.currentCab)*.7+this.chassisDrop,.82),cos=Math.cos(s.yaw),sin=Math.sin(s.yaw);
@@ -287,13 +293,14 @@ export class TruckScene {
     this.cockpit.position.set(s.x+local.x*cos+forward*sin,s.y+local.y*pitchCos-local.z*pitchSin,s.z-local.x*sin+forward*cos);
     const bob=Math.sin(s.elapsed*9)*Math.min(s.speed/1000,.018);
     const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.cockpit.position.y+=reducedMotion?0:bob;this.cockpit.rotation.set(.12+s.pitch,s.yaw,0);
+    const hit=s.impacts.at(-1),age=hit?s.elapsed-hit.time:1,jolt=!reducedMotion&&hit&&age<.18?Math.sin(age*100)*hit.strength*(1-age/.18):0;
+    this.cockpit.position.y+=reducedMotion?0:bob+jolt*.025;this.cockpit.rotation.set(.12+s.pitch+jolt*.008,s.yaw,0);
     this.cockpit.fov=(isMobileLayout()&&innerHeight>innerWidth?1.6:1.12)+(reducedMotion?0:Math.min(s.speed/33.3,1)*.14);
     for(const m of this.truck.getChildMeshes())if(m.name.startsWith('steering_assembly'))m.rotationQuaternion=Quaternion.RotationAxis(new Vector3(0,-.60,.80),-s.steering*.75);
     for(const mirror of this.mirrors){const side=mirror.side;mirror.camera.position.set(s.x+side*1.44*cos+2.5*sin,s.y+3.3,s.z-side*1.44*sin+2.5*cos);mirror.camera.rotation.set(.08-s.pitch,s.yaw+Math.PI-side*.14,0);}
     this.displayTick+=1;if(this.displayTick%6===0)this.drawDisplays(s.speed,s.elapsed,s.progress);
   }
-  start(callback:(dt:number)=>void){this.engine.runRenderLoop(()=>{const dt=Math.min(this.engine.getDeltaTime()/1000,.1);this.elapsed+=dt;callback(dt);this.scene.render();this.canvas.dataset.fps=Math.round(this.engine.getFps()).toString();if(this.elapsed>5&&!document.hidden)this.slowFrames=dt>.04?this.slowFrames+1:Math.max(0,this.slowFrames-2);if(this.slowFrames>180&&this.quality==='balanced'){this.quality='performance';this.engine.setHardwareScalingLevel(isMobileLayout()?1.2:Math.max(1.2,window.devicePixelRatio/1.2));this.shadow.getShadowMap()!.resize(512);}});}
+  start(callback:(dt:number)=>void){this.engine.runRenderLoop(()=>{const dt=Math.min(this.engine.getDeltaTime()/1000,.1);this.elapsed+=dt;callback(dt);this.scene.render();this.canvas.dataset.sparks=this.scene.particleSystems.reduce((n,p)=>n+p.getActiveCount(),0).toString();this.canvas.dataset.fps=Math.round(this.engine.getFps()).toString();if(this.elapsed>5&&!document.hidden)this.slowFrames=dt>.04?this.slowFrames+1:Math.max(0,this.slowFrames-2);if(this.slowFrames>180&&this.quality==='balanced'){this.quality='performance';this.engine.setHardwareScalingLevel(isMobileLayout()?1.2:Math.max(1.2,window.devicePixelRatio/1.2));this.shadow.getShadowMap()!.resize(512);}});}
   private inspectionFov(){return Math.max(1.02,Math.min(1.5,2*Math.atan(Math.tan(.80)/(innerWidth/innerHeight))));}
   refreshMobileLayout(){if(isMobileLayout())this.layoutCamera();}
   private layoutCamera(){
