@@ -5,6 +5,7 @@ import { FIELD_SIZE,GRID_ORIGIN,RIVALS,startingGrid } from '../src/game/raceFiel
 import { Simulation,initPhysics } from '../src/game/simulation.ts';
 import { atDistance,nearestTrack,TRACK_LENGTH } from '../src/game/track.ts';
 import { buyConfiguration,freshCareer,settleRace } from '../src/game/career.ts';
+import { sharesLane,signedGap } from '../src/game/aiDriving.ts';
 const seeded=(seed:number)=>()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/2**32;};
 await initPhysics();
 
@@ -35,14 +36,15 @@ test('random starts begin at zero route progress, keep a common finish and do no
   }
 });
 
-test('all six rivals follow a stopped player without overlapping their trailers',()=>{
+test('all six rivals follow or pass a stopped player without overlapping their trailers',()=>{
   const sim=new Simulation(DEFAULT_CONFIG,TENDERS[0],()=>0);sim.countdown=0;
   for(let tick=0;tick<7200;tick++){
     sim.step({throttle:false,brake:true,left:false,right:false});
-    const player=sim.progress.validatedDistance,lane=nearestTrack(sim.snapshot().x,sim.snapshot().z).lane;
+    const snapshot=sim.snapshot(),player=nearestTrack(snapshot.x,snapshot.z),vehicles=sim.aiDistances.map((distance,i)=>({distance,speed:sim.aiSpeeds[i],...sim.aiPaths[i].envelope(distance+GRID_ORIGIN)}));
     for(let i=0;i<RIVALS.length;i++){
-      if(Math.abs(sim.grid.rivals[i].lane-lane)<1&&sim.aiDistances[i]<player)assert.ok(player-sim.aiDistances[i]>=23.8);
-      for(let j=0;j<i;j++)if(sim.grid.rivals[i].lane===sim.grid.rivals[j].lane)assert.ok(Math.abs(sim.aiDistances[i]-sim.aiDistances[j])>=23.8);
+      const playerVehicle={distance:player.s-GRID_ORIGIN,speed:0,minLane:player.lane,maxLane:player.lane};
+      if(sharesLane(vehicles[i],playerVehicle)&&signedGap(vehicles[i].distance,playerVehicle.distance)>0)assert.ok(signedGap(vehicles[i].distance,playerVehicle.distance)>=23.8);
+      for(let j=0;j<i;j++)if(sharesLane(vehicles[i],vehicles[j]))assert.ok(Math.abs(signedGap(vehicles[i].distance,vehicles[j].distance))>=23.8);
     }
   }
   assert.ok(sim.speed<.1);assert.ok(sim.aiSpeeds.every(Number.isFinite));sim.dispose();

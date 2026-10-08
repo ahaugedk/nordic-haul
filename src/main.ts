@@ -13,9 +13,10 @@ import { cityFor,tendersFrom,withLoad,type TravelTender } from './data/europe';
 import { europeMap } from './game/europeMap';
 import { DispatchAudio } from './game/dispatchAudio';
 import { selectedPartInfo,type SelectedPart } from './game/selectionInfo';
-import { FIELD_SIZE,RIVALS } from './game/raceField';
+import { FIELD_SIZE,GRID_ORIGIN,RIVALS } from './game/raceField';
 import { isMobileLayout } from './game/mobileLayout';
 import { prepareImpactPreview } from './game/impactPreview';
+import { prepareLanePreview,driveLanePreview } from './game/lanePreview';
 
 const app=document.querySelector<HTMLDivElement>('#app')!;
 const canvas=document.querySelector<HTMLCanvasElement>('#scene')!;
@@ -31,6 +32,7 @@ const input:Controls={throttle:false,brake:false,left:false,right:false};
 const audio=new EngineAudio();
 const dispatchAudio=new DispatchAudio();
 const impactPreview=import.meta.env.DEV?new URLSearchParams(location.search).get('impactPreview'):null;
+const lanePreview=import.meta.env.DEV?new URLSearchParams(location.search).has('lanePreview'):false;
 let impactPreviewFrames=0;
 dispatchAudio.onStateChange=()=>syncAudioControls();
 let soundEnabled=true;
@@ -98,6 +100,7 @@ async function startRace(){
   if(!career.ownsTruck)return;
   raceMusic.start();playUI(()=>dispatchAudio.depart());lastCountdownCue=-1;lastImpactCue=0;mode='race';clearInputs();sim?.dispose();sim=new Simulation(career.truck,chosen);
   if(import.meta.env.DEV&&impactPreview){prepareImpactPreview(sim,impactPreview);impactPreviewFrames=0;}
+  if(import.meta.env.DEV&&lanePreview)prepareLanePreview(sim);
   accumulator=0;view.setRoute(cityFor(chosen.origin).name,cityFor(chosen.destination).name);view.setMode('race');view.updateRace(sim.snapshot());render();updateHUD(sim.snapshot());
   if(soundEnabled)void unlockAudio().catch(()=>{});
 }
@@ -174,9 +177,16 @@ try{
   await initPhysics();view=await TruckScene.create(canvas);view.configure(draft);render();
   view.start(dt=>{
     if(mode==='race'&&sim){
-      accumulator+=dt;while(accumulator>=1/60){sim.step(input);accumulator-=1/60;}
+      accumulator+=dt;while(accumulator>=1/60){
+        if(import.meta.env.DEV&&lanePreview)driveLanePreview(sim);
+        sim.step(import.meta.env.DEV&&lanePreview?{...input,throttle:true}:input);accumulator-=1/60;
+      }
       const s=sim.snapshot();view.updateRace(s);audio.update(s.speed,input.throttle,soundEnabled&&!sim.paused&&s.countdown<=0);
       if(import.meta.env.DEV&&impactPreview&&Number(canvas.dataset.sparks)>0&&++impactPreviewFrames>10&&s.impacts.length){sim.paused=true;raceMusic.pause();}
+      if(import.meta.env.DEV&&lanePreview){
+        const lane=sim.aiPaths[0].laneAt(sim.aiDistances[0]+GRID_ORIGIN);canvas.dataset.lanePreview=lane.toFixed(2);
+        if(lane<1.6&&lane>1){sim.paused=true;raceMusic.pause();}
+      }
       for(const hit of s.impacts)if(hit.id>lastImpactCue){lastImpactCue=hit.id;if(soundEnabled)dispatchAudio.impact(hit.strength);}
       hudTime+=dt;if(hudTime>.08){updateHUD(s);hudTime=0;}
       if(s.done){const paid=settleRace(career,chosen.reward,s.place,s.elapsed<=chosen.par,chosen.destination);career=paid.career;saveCareer(career);result={payout:paid.payout,bonus:paid.bonus,place:s.place,time:s.elapsed};mode='results';raceMusic.stop();audio.update(0,false,false);dispatchAudio.victory(s.place===1);render();}

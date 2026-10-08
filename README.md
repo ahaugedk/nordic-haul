@@ -1,6 +1,6 @@
 # Nordic Haul — Volvo truck simulator prototype
 
-A local browser game in Danish: configure a reference-based FH16 Aero, choose a contract on the animated Europe map, race two computer-controlled trucks from the cab, earn a payment and continue from the destination city.
+A local browser game in Danish: configure a reference-based FH16 Aero, choose a contract on the animated Europe map, race six computer-controlled trucks from the cab, earn a payment and continue from the destination city.
 
 ## Run
 
@@ -84,3 +84,9 @@ Mobile garage telemetry is hidden. The confirmation button and budget summary sh
 Real Rapier solver contacts with guardrails, rival tractors and their articulated trailers produce contact-point sparks and a short metal impact cue. Collision severity uses relative velocity at the contact point, including trailer rotation. A fresh strike removes speed; continued scraping applies drag, and overlapping rail segments share a cooldown so their seams cannot multiply the penalty. Penalties use the strongest simultaneous contact, cannot add speed, and cannot drive speed below zero. Burst IDs are retained briefly so a slow render frame still receives them once. Four reusable particle systems cap visual cost; sparks inherit forward momentum, fall under gravity and expire quickly. Pausing freezes them, and reset/garage transitions clear feedback. Camera recoil respects reduced-motion preferences and impact sounds follow master mute.
 
 Development-only `?impactPreview=guardrail`, `truck` or `trailer` browser fixtures use the actual simulation and effect renderer, then freeze a contact frame for visual QA. Vite production builds remove the fixture branches and setup code.
+
+## Rival lane changes
+
+After the initial launch clearance, rivals overtake slower traffic in an adjacent free lane and return right when there is room. Staggered decisions, cooldowns and reservations covering the full tractor/trailer envelope prevent nearby simultaneous merges and lane swaps. Front and rear clearance account for closing speeds, including the player and vehicles across the loop boundary; following/braking remains active during a manoeuvre.
+
+Lane changes follow a smooth distance-based path over at least 48 metres (normally about 4.5 seconds). Tractor heading follows the lateral movement, while the trailer axle follows the earlier path rather than moving sideways with the tractor. Rendering and both collision bodies use the same poses; pausing freezes manoeuvres. The local-only `?lanePreview=1` fixture sets up a real AI overtake and freezes halfway through for browser QA. Production builds remove its setup and driving code.
