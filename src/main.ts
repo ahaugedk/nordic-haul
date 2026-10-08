@@ -107,7 +107,7 @@ async function startRace(){
   if(import.meta.env.DEV&&lanePreview)prepareLanePreview(sim);
   if(import.meta.env.DEV&&terminalPreview){prepareTerminalPreview(sim,terminalPreview.startsWith('night'),terminalPreview==='finish');raceMusic.pause();}
   if(import.meta.env.DEV&&signPreview){prepareSignPreview(sim,signPreview==='night',signPreview==='lap');raceMusic.pause();}
-  accumulator=0;view.setRoute(cityFor(chosen.origin).name,cityFor(chosen.destination).name,chosen.distance);view.setMode('race');view.updateRace(sim.snapshot());render();updateHUD(sim.snapshot());
+  accumulator=0;view.setRoute(cityFor(chosen.origin).name,cityFor(chosen.destination).name,chosen.distance,chosen.roadKm,sim.grid.player.distance-GRID_ORIGIN);view.setMode('race');view.updateRace(sim.snapshot());render();updateHUD(sim.snapshot());
   if(import.meta.env.DEV&&terminalPreview?.endsWith('overview'))view.showTerminalArrival();
   if(soundEnabled)void unlockAudio().catch(()=>{});
 }

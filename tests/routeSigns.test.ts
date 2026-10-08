@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { NullEngine,PBRMaterial,Scene,TransformNode,Vector3,VertexBuffer } from '@babylonjs/core';
-import { buildGantry,distanceLabel,gantryClearOfTerminal,GANTRY_POSITIONS,signDistance,SIGN_BOTTOM } from '../src/game/routeSigns.ts';
+import { buildGantry,distanceLabel,gantryClearOfTerminal,GANTRY_POSITIONS,signDistance,virtualSignDistance,SIGN_BOTTOM } from '../src/game/routeSigns.ts';
 import { TRACK_LENGTH,atDistance,ROAD_HALF_WIDTH } from '../src/game/track.ts';
 import { GRID_ORIGIN } from '../src/game/raceField.ts';
+import { CITIES,tendersFrom } from '../src/data/europe.ts';
 
 test('overhead distances point to the actual route finish, accounting for start offset and extra laps',()=>{
   for(const laps of [1,1.25,1.5,2]){
@@ -20,9 +21,30 @@ test('overhead distances point to the actual route finish, accounting for start 
   assert.equal(signDistance(2750,TRACK_LENGTH,2000),TRACK_LENGTH+80-2750);
 });
 test('readings use Danish kilometres and metres close to the terminal',()=>{
+  assert.equal(distanceLabel(379700),'380 km');assert.equal(distanceLabel(1200000),'1.200 km');
   assert.equal(distanceLabel(2395),'2,4 km');assert.equal(distanceLabel(1500),'1,5 km');
   assert.equal(distanceLabel(1000),'1,0 km');assert.equal(distanceLabel(913),'910 m');
   assert.equal(distanceLabel(295),'300 m');assert.equal(distanceLabel(0),'0 m');
+});
+test('virtual distances match contract kilometres at the start, along the route and at delivery for every start row',()=>{
+  for(const city of CITIES)for(const job of tendersFrom(city.id))for(const start of [0,8,48,56,96,104,144,152]){
+    const target=job.distance*TRACK_LENGTH;
+    assert.equal(virtualSignDistance(GRID_ORIGIN+start,target,start,job.roadKm,start),job.roadKm*1000);
+    for(const fraction of [.25,.5,.75,1]){
+      const s=GRID_ORIGIN+start+(target-start)*fraction,physical=s%TRACK_LENGTH;
+      const displayed=virtualSignDistance(physical,target,s-GRID_ORIGIN-20,job.roadKm,start);
+      assert.notEqual(displayed,null,'The virtual route reaches zero at the finish');
+      assert.ok(Math.abs(displayed!-job.roadKm*1000*(1-fraction))<.00001,'Sign uses the same geographic progression as the chosen contract');
+    }
+  }
+});
+test('a repeated gantry shows hundreds of virtual kilometres instead of the few physical race kilometres',()=>{
+  const target=TRACK_LENGTH*1.5;
+  const first=virtualSignDistance(650,target,500,860)!;
+  const second=virtualSignDistance(650,target,TRACK_LENGTH+500,860)!;
+  assert.ok(first>700000&&first<800000);assert.ok(second>150000&&second<200000);
+  assert.equal(distanceLabel(second),'176 km');
+  assert.equal(virtualSignDistance(650,TRACK_LENGTH,TRACK_LENGTH,360),null);
 });
 test('gantries stay out of the terminal arrival gate and still provide several signs per route',()=>{
   for(const laps of [1,1.25,1.5,2]){

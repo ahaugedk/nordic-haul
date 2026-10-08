@@ -238,9 +238,9 @@ export class TruckScene {
     }
     this.drawDisplays(0,0,0);
   }
-  setRoute(origin:string,destination:string,distance=1){
+  setRoute(origin:string,destination:string,distance:number,roadKm:number,startDistance=0){
     this.origin=origin;this.destination=destination;this.drawDisplays(0,0,0);
-    this.routeTarget=TRACK_LENGTH*distance;this.routeSigns.configure(destination,distance);
+    this.routeTarget=TRACK_LENGTH*distance;this.routeSigns.configure(destination,distance,roadKm,startDistance);
     if(this.terminal){const old=this.terminal,meshes=old.root.getChildMeshes();this.nightMaterials=this.nightMaterials.filter(m=>!old.nightMaterials.includes(m));for(const light of this.headlights)light.excludedMeshes=light.excludedMeshes.filter(m=>!meshes.includes(m));old.root.dispose(false,true);}
     this.terminal=buildTerminal(this.scene,this.motorway,distance,destination,(...args)=>this.label(...args));this.nightMaterials.push(...this.terminal.nightMaterials);
     // Reserve the terminal's light budget for its own projectors and nearby yard lamps.

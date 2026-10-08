@@ -8,10 +8,18 @@ export function signDistance(s:number,target:number,travelled:number):number|nul
   // Keep the just-passed reading until the board is safely behind the cab.
   const pass=s+Math.ceil((travelled+GRID_ORIGIN-s-65)/TRACK_LENGTH)*TRACK_LENGTH;
   const remaining=GRID_ORIGIN+target-pass;
-  return remaining>=0?remaining:null;
+  return remaining>=-1e-6?Math.max(0,remaining):null;
+}
+export function virtualSignDistance(s:number,target:number,travelled:number,roadKm:number,startDistance=0):number|null{
+  const remaining=signDistance(s,target,travelled);if(remaining===null)return null;
+  // The entire delivery corresponds to the contract's geographic road distance,
+  // even when a shuffled grid slot shortens the player's physical racing path.
+  const fraction=Math.max(0,Math.min(1,remaining/Math.max(1,target-startDistance)));
+  return fraction*roadKm*1000;
 }
 export function distanceLabel(metres:number){
   if(metres<1000)return `${Math.max(0,Math.round(metres/10)*10)} m`;
+  if(metres>=10000)return `${Math.round(metres/1000).toLocaleString('da-DK')} km`;
   return `${(Math.round(metres/100)/10).toFixed(1).replace('.',',')} km`;
 }
 export function gantryClearOfTerminal(s:number,target:number){
@@ -39,7 +47,7 @@ export function buildGantry(scene:Scene,parent:TransformNode,s:number,steel:PBRM
 export class RouteSigns {
   private gantries:ReturnType<typeof buildGantry>[]=[];
   private boards:{texture:DynamicTexture;material:StandardMaterial;last:string}[]=[];
-  private destination='';private target=TRACK_LENGTH;
+  private destination='';private target=TRACK_LENGTH;private roadKm=0;private startDistance=0;
   constructor(scene:Scene,parent:TransformNode){
     const steel=new PBRMaterial('distance gantry galvanized steel',scene);steel.albedoColor=Color3.FromHexString('#8e9a9f').toLinearSpace();steel.metallic=.75;steel.roughness=.38;
     this.gantries=GANTRY_POSITIONS.map(s=>buildGantry(scene,parent,s,steel));
@@ -51,15 +59,16 @@ export class RouteSigns {
       return {texture,material,last:''};
     });
   }
-  configure(destination:string,distance:number){
+  configure(destination:string,distance:number,roadKm:number,startDistance=0){
     this.destination=destination.toLocaleUpperCase('da-DK');this.target=TRACK_LENGTH*distance;
+    this.roadKm=roadKm;this.startDistance=startDistance;
     this.gantries.forEach(g=>g.root.setEnabled(gantryClearOfTerminal(g.s,this.target)));
     this.boards.forEach(b=>b.last='');this.update(0,false);
   }
   update(travelled:number,night:boolean){
     this.gantries.forEach((g,i)=>{
       if(!g.root.isEnabled())return;
-      const remaining=signDistance(g.s,this.target,travelled),board=this.boards[i];
+      const remaining=virtualSignDistance(g.s,this.target,travelled,this.roadKm,this.startDistance),board=this.boards[i];
       board.material.emissiveColor.setAll(night?.7:.22);
       if(remaining===null)return;
       const reading=distanceLabel(remaining);if(reading===board.last)return;board.last=reading;
@@ -67,7 +76,7 @@ export class RouteSigns {
       c.fillStyle='#155ba1';c.fillRect(0,0,1024,256);c.strokeStyle='#e7f0ed';c.lineWidth=5;c.strokeRect(9,9,1006,238);
       c.fillStyle='#f5f7ed';c.textAlign='left';c.font='600 61px Arial';
       const font=Math.min(61,61*785/c.measureText(this.destination).width);c.font=`600 ${font}px Arial`;c.fillText(this.destination,40,82);
-      c.font='600 100px Arial';c.fillText(reading,40,197);
+      c.font='600 100px Arial';const size=Math.min(100,100*350/c.measureText(reading).width);c.font=`600 ${size}px Arial`;c.fillText(reading,40,197);
       c.font='500 29px Arial';c.fillText('LOGISTIKTERMINAL',430,192);
       c.lineWidth=12;c.lineCap='square';c.beginPath();c.moveTo(920,203);c.lineTo(920,66);c.moveTo(890,101);c.lineTo(920,66);c.lineTo(950,101);c.stroke();
       board.texture.update();
