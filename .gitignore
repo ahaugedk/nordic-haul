@@ -3,4 +3,16 @@ dist/
 *.blend1
 test-results/
 
+# Local tooling and generated files
+.DS_Store
+__pycache__/
+*.py[cod]
 .sites-runtime/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Independent local publication checkout; canonical source lives at the root
+/sites/
