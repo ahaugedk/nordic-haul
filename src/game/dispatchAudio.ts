@@ -4,35 +4,53 @@ export class DispatchAudio {
   ctx?:AudioContext;settings:AudioSettings=loadAudioSettings();
   private musicBus?:GainNode;private effectsBus?:GainNode;private compressor?:DynamicsCompressorNode;private noise?:AudioBuffer;
   private timer?:ReturnType<typeof setInterval>;private tick=0;private nextBeat=0;private lastHover=0;private lastScroll=0;
-  private pending?:Promise<void>;private racing=false;private voices=new Set<AudioScheduledSourceNode>();
+  private racing=false;private voices=new Set<AudioScheduledSourceNode>();
+  onStateChange?:()=>void;startFailed=false;
   get enabled(){return this.settings.effects;}
   get station(){return RADIO_STATIONS[this.settings.station];}
   get ready(){return this.ctx?.state==='running';}
   get musicPlaying(){return !!this.ready&&this.settings.music&&this.settings.volume>0;}
   async unlock(){
-    if(this.pending)return this.pending;
-    this.pending=this.initialize();try{await this.pending;}finally{this.pending=undefined;}
+    try{
+      if(!this.ctx||this.ctx.state==='closed'){
+        this.ctx=new AudioContext();this.musicBus=undefined;this.effectsBus=undefined;this.voices.clear();
+        this.ctx.addEventListener('statechange',()=>this.onStateChange?.());
+      }
+      // Resume in EVERY trusted gesture, even if an earlier background resume
+      // is still pending under autoplay policy. A pending promise must not lock
+      // out a later click on the sound button.
+      const resume=this.ctx.state==='running'?Promise.resolve():this.ctx.resume();
+      this.initialize();await resume;
+      this.startFailed=false;this.applyLevels();this.schedule();
+      if(!this.timer)this.timer=setInterval(()=>this.schedule(),25);
+      this.onStateChange?.();
+    }catch(error){this.startFailed=true;this.onStateChange?.();throw error;}
   }
-  private async initialize(){
-    this.ctx??=new AudioContext();if(this.ctx.state!=='running')await this.ctx.resume();
+  private initialize(){
+    if(!this.ctx)return;
     if(!this.musicBus){
       this.musicBus=this.ctx.createGain();this.effectsBus=this.ctx.createGain();this.compressor=this.ctx.createDynamicsCompressor();
+      this.musicBus.gain.value=0;this.effectsBus.gain.value=0;
       this.compressor.threshold.value=-16;this.compressor.knee.value=20;this.compressor.ratio.value=4;this.compressor.attack.value=.005;this.compressor.release.value=.15;
       this.musicBus.connect(this.compressor);this.effectsBus.connect(this.compressor);this.compressor.connect(this.ctx.destination);
       this.noise=this.ctx.createBuffer(1,Math.floor(this.ctx.sampleRate*.2),this.ctx.sampleRate);const data=this.noise.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;
       this.nextBeat=this.ctx.currentTime+.035;
     }
-    this.applyLevels();this.schedule();
-    if(!this.timer)this.timer=setInterval(()=>this.schedule(),25);
   }
   private applyLevels(){
     if(!this.ctx||!this.musicBus||!this.effectsBus)return;
-    this.musicBus.gain.setTargetAtTime(this.settings.music?this.settings.volume*(this.racing?.17:.24):0,this.ctx.currentTime,.12);
-    this.effectsBus.gain.setTargetAtTime(this.settings.effects?.24:0,this.ctx.currentTime,.04);
+    this.musicBus.gain.setTargetAtTime(this.settings.music?this.settings.volume*(this.racing?.4:.5):0,this.ctx.currentTime,.12);
+    this.effectsBus.gain.setTargetAtTime(this.settings.effects?.4:0,this.ctx.currentTime,.04);
   }
   setRacing(racing:boolean){this.racing=racing;this.applyLevels();}
   toggleEffects(){this.settings.effects=!this.settings.effects;saveAudioSettings(this.settings);this.applyLevels();}
   toggleMusic(){this.settings.music=!this.settings.music;saveAudioSettings(this.settings);this.nextBeat=(this.ctx?.currentTime??0)+.04;this.applyLevels();}
+  playMusic(){
+    this.settings.music=true;
+    // An explicit play action should be audible even after a saved zero volume.
+    if(this.settings.volume===0)this.settings.volume=.55;
+    saveAudioSettings(this.settings);this.nextBeat=(this.ctx?.currentTime??0)+.04;this.applyLevels();
+  }
   toggleEngine(){this.settings.engine=!this.settings.engine;saveAudioSettings(this.settings);}
   setVolume(volume:number){this.settings.volume=Math.max(0,Math.min(1,volume));saveAudioSettings(this.settings);this.applyLevels();}
   changeStation(direction=1){

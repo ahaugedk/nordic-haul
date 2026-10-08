@@ -71,3 +71,5 @@ footer,body[data-mode=tenders] footer{height:35px;padding:0 32px;background:#0a0
 .selection-info-body>p{display:block!important}
 
 .minimap .rival-marker{stroke:#101720;stroke-width:1}
+
+.radio-player[data-radio-state=ready] #radio-toggle{width:58px;font-size:10px;font-weight:700;letter-spacing:.5px;background:var(--race);color:#11161a;border-color:var(--race)}
