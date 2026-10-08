@@ -69,3 +69,5 @@ footer,body[data-mode=tenders] footer{height:35px;padding:0 32px;background:#0a0
 @media(min-width:950px) and (max-width:1300px){.selection-info{width:270px;left:calc(100% + 15px);padding:12px}.selection-info summary strong{font-size:21px}.selection-info dl>div{font-size:9px}}
 @media(max-width:949px){.selection-info{left:0;bottom:calc(100% + 12px);width:min(310px,calc(100vw - 44px));padding:10px 13px}.selection-info summary{padding-right:15px}.selection-info summary:after{content:'＋';position:absolute;right:12px;top:16px;color:var(--race)}.selection-info[open] summary:after{content:'−'}.selection-info summary strong{font-size:19px}.selection-info-body{max-height:150px;overflow:auto;padding-right:3px}}
 .selection-info-body>p{display:block!important}
+
+.minimap .rival-marker{stroke:#101720;stroke-width:1}

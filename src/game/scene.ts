@@ -6,6 +6,7 @@ import { dayCycle } from './dayCycle';
 import { buildTrailer } from './trailerModel';
 import { mirrorSurfaceUV,orientMirrorFeed } from './mirrorSurface';
 import type { RaceSnapshot } from './simulation';
+import { RIVALS } from './raceField';
 
 export class TruckScene {
   engine:Engine|WebGPUEngine;scene:Scene;garage:TransformNode;motorway:TransformNode;
@@ -175,9 +176,9 @@ export class TruckScene {
     this.paint=this.scene.getMaterialByName('body_paint') as PBRMaterial;
     const glazing=this.scene.getMaterialByName('glass') as PBRMaterial;if(glazing)glazing.albedoColor=new Color3(.022,.035,.048);
     const liner=this.scene.getMaterialByName('headliner') as PBRMaterial;if(liner)liner.albedoColor=new Color3(.22,.23,.22);
-    for(let i=0;i<2;i++){
+    for(let i=0;i<RIVALS.length;i++){
       const clone=this.truck.clone('opponent '+i,null,false)!;
-      const clonePaint=this.paint.clone('opponent paint '+i)!;clonePaint.albedoColor=Color3.FromHexString(i?'#be8e47':'#a9b5af');
+      const clonePaint=this.paint.clone('opponent paint '+i)!;clonePaint.albedoColor=Color3.FromHexString(RIVALS[i].color);
       for(const m of clone.getChildMeshes())if(m.material===this.paint)m.material=clonePaint;
       clone.setEnabled(false);this.opponents.push(clone);const trailer=buildTrailer(this.scene,i);this.opponentTrailers.push(trailer.root);this.nightMaterials.push(...trailer.nightMaterials);
     }
@@ -275,7 +276,7 @@ export class TruckScene {
   }
   updateRace(s:RaceSnapshot){
     this.truck.position.set(s.x,s.y,s.z);this.truck.rotation.set(s.pitch,s.yaw,0);this.updateDaylight(s.elapsed,s.x,s.z);
-    for(let i=0;i<2;i++){this.opponents[i].position.set(s.ai[i].x,s.ai[i].y,s.ai[i].z);this.opponents[i].rotation.set(s.ai[i].pitch,s.ai[i].yaw,0);const t=s.ai[i].trailer;this.opponentTrailers[i].position.set(t.x,t.y,t.z);this.opponentTrailers[i].rotation.set(t.pitch,t.yaw,0);}
+    for(let i=0;i<s.ai.length;i++){this.opponents[i].position.set(s.ai[i].x,s.ai[i].y,s.ai[i].z);this.opponents[i].rotation.set(s.ai[i].pitch,s.ai[i].yaw,0);const t=s.ai[i].trailer;this.opponentTrailers[i].position.set(t.x,t.y,t.z);this.opponentTrailers[i].rotation.set(t.pitch,t.yaw,0);}
     const local=new Vector3(-.65,3.07+Math.min(0,this.currentCab)*.7+this.chassisDrop,.82),cos=Math.cos(s.yaw),sin=Math.sin(s.yaw);
     const pitchCos=Math.cos(s.pitch),pitchSin=Math.sin(s.pitch),forward=local.y*pitchSin+local.z*pitchCos;
     this.cockpit.position.set(s.x+local.x*cos+forward*sin,s.y+local.y*pitchCos-local.z*pitchSin,s.z-local.x*sin+forward*cos);

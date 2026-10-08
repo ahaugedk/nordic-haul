@@ -5,6 +5,7 @@ import { TRACK,TRACK_LENGTH,TRACK_RX,ROAD_HALF_WIDTH,TERRAIN_SIZE,TERRAIN_SEGMEN
 import { accelerationFor } from '../src/game/drivetrain.ts';
 import { DAY_SECONDS,dayCycle } from '../src/game/dayCycle.ts';
 import { Simulation,initPhysics } from '../src/game/simulation.ts';
+import { RIVALS } from '../src/game/raceField.ts';
 await initPhysics();
 const gas={throttle:true,brake:false,left:false,right:false};
 test('payload choices increase payment on the same route without changing destination or bonus target',()=>{
@@ -24,10 +25,10 @@ test('power, payload and gravity affect acceleration independently',()=>{
 });
 test('actual loaded Rapier trucks climb the road and more power compensates for heavy cargo',()=>{
   const run=(tonnes:number,engine=DEFAULT_CONFIG.engine)=>{
-    const sim=new Simulation({...DEFAULT_CONFIG,engine},{...TENDERS[0],tonnes});sim.countdown=0;
+    const sim=new Simulation({...DEFAULT_CONFIG,engine},{...TENDERS[0],tonnes},()=>0);sim.countdown=0;
     const y=sim.snapshot().y;for(let i=0;i<1800;i++)sim.step(gas);
     const result=sim.snapshot();assert.ok(result.y>y+7);assert.ok(result.progress>0);assert.ok(Math.abs(sim.body.translation().y-(result.y+1.9))<.01);
-    assert.equal(result.ai.length,2);assert.ok(result.ai.every(a=>Number.isFinite(a.y)&&Number.isFinite(a.pitch)));sim.dispose();return result;
+    assert.equal(result.ai.length,RIVALS.length);assert.ok(result.ai.every(a=>Number.isFinite(a.y)&&Number.isFinite(a.pitch)));sim.dispose();return result;
   };
   const light=run(8),heavy=run(24),strong=run(24,'D17A780');
   assert.ok(light.progress>heavy.progress+.025);assert.ok(strong.progress>heavy.progress+.015);
@@ -40,7 +41,7 @@ test('highway is closed with long climbs, over seventy metres of elevation and e
   for(const s of [10,700,1150,1850]){const p=atDistance(s,3.5),n=nearestTrack(p.x,p.z);assert.ok(Math.abs(n.lane-3.5)<.03);assert.ok(Math.abs(n.s-s)<.1);}
 });
 test('guardrails keep a sideways-moving truck inside the road',()=>{
-  const sim=new Simulation(DEFAULT_CONFIG,TENDERS[0]);sim.countdown=0;
+  const sim=new Simulation(DEFAULT_CONFIG,TENDERS[0],()=>0);sim.countdown=0;
   const p=atDistance(100,6.8);sim.body.setTranslation({x:p.x,y:p.y+1.9,z:p.z},true);sim.yaw=Math.PI/2;sim.speed=18;
   for(let i=0;i<90;i++)sim.step({...gas,throttle:false});
   assert.ok(nearestTrack(sim.snapshot().x,sim.snapshot().z).distance<ROAD_HALF_WIDTH);sim.dispose();
@@ -60,7 +61,7 @@ test('day clock runs 2.5 days per minute with repeated nights and headlights at 
 test('a long eleven-percent climb visibly loses speed under full throttle, and payload/power change the outcome',()=>{
   const peak=TRACK.reduce((a,b)=>a.grade>b.grade?a:b);
   const run=(tonnes:number,engine=DEFAULT_CONFIG.engine,s=peak.s,throttle=true)=>{
-    const sim=new Simulation({...DEFAULT_CONFIG,engine},{...TENDERS[0],tonnes});const p=atDistance(s,3.5);sim.countdown=0;
+    const sim=new Simulation({...DEFAULT_CONFIG,engine},{...TENDERS[0],tonnes},()=>0);const p=atDistance(s,3.5);sim.countdown=0;
     sim.body.setTranslation({x:p.x,y:p.y+1.9,z:p.z},true);sim.yaw=p.yaw;sim.speed=20;sim.progress.distance=s;sim.progress.last=s;
     for(let i=0;i<900;i++)sim.step({throttle,brake:false,left:false,right:false});
     const result=sim.snapshot();assert.equal(result.offRoad,false);sim.dispose();return result;

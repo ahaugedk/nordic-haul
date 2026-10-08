@@ -31,6 +31,6 @@ export function buyConfiguration(c:Career,draft:TruckConfig):Career|null {
 }
 export function settleRace(c:Career,base:number,place:number,withinTime:boolean,destination?:string):{career:Career;payout:number;bonus:number} {
   const bonus=withinTime?Math.round(base*.15):0;
-  const payout=Math.round(base*([1,.8,.65][place-1]??.65))+bonus;
+  const payout=Math.round(base*([1,.8,.65,.55,.45,.35,.25][place-1]??.25))+bonus;
   return {career:{...c,funds:c.funds+payout,races:c.races+1,wins:c.wins+(place===1?1:0),earned:c.earned+payout,currentCity:CITIES.some(x=>x.id===destination)?destination!:c.currentCity},payout,bonus};
 }

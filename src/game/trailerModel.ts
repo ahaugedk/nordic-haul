@@ -1,10 +1,12 @@
 import { Color3,DynamicTexture,Mesh,MeshBuilder,PBRMaterial,Scene,TransformNode } from '@babylonjs/core';
 import { TRAILER_LENGTH,TRAILER_WIDTH } from './trailer';
+import { RIVALS } from './raceField';
 /** Generic dry-freight semi-trailer; original runtime geometry, not an OEM-branded product. */
 export function buildTrailer(scene:Scene,index:number){
+  const identity=RIVALS[index];
   const root=new TransformNode('rival semi-trailer '+index,scene),parts:Mesh[]=[];
   const material=(name:string,color:string,roughness=.7,metallic=0)=>{const m=new PBRMaterial('trailer '+index+' '+name,scene);m.albedoColor=Color3.FromHexString(color);m.roughness=roughness;m.metallic=metallic;return m;};
-  const body=material('box',index?'#c09048':'#d7ddd9',.43),frame=material('chassis','#26313a',.65,.55),aluminium=material('rails and rims','#b7c0c5',.35,.75),rubber=material('rubber','#171d20',.92),door=material('rear doors',index?'#dac7a3':'#d1d9da',.45),red=material('tail lights','#c02519',.3),amber=material('side markers','#f3a530',.3),black=material('door seals','#20272b'),reflector=material('reflective safety tape','#ffd576',.36);
+  const body=material('box',identity.color,.43),frame=material('chassis','#26313a',.65,.55),aluminium=material('rails and rims','#b7c0c5',.35,.75),rubber=material('rubber','#171d20',.92),door=material('rear doors',identity.color,.45),red=material('tail lights','#c02519',.3),amber=material('side markers','#f3a530',.3),black=material('door seals','#20272b'),reflector=material('reflective safety tape','#ffd576',.36);
   const box=(name:string,x:number,y:number,z:number,w:number,h:number,d:number,m:PBRMaterial)=>{const mesh=MeshBuilder.CreateBox('trailer '+name,{width:w,height:h,depth:d},scene);mesh.position.set(x,y,z);mesh.material=m;mesh.parent=root;mesh.receiveShadows=true;parts.push(mesh);return mesh;};
   box('freight box',0,2.71,0,TRAILER_WIDTH,2.58,TRAILER_LENGTH,body);
   box('roof cap',0,4.015,0,2.59,.06,13.64,aluminium);
@@ -39,8 +41,8 @@ export function buildTrailer(scene:Scene,index:number){
   for(const x of [-1.15,1.15])box('vertical reflective tape',x,2.68,-6.94,.035,2.38,.008,reflector);
   box('lower reflective tape',0,1.52,-6.94,2.35,.035,.008,reflector);
   const branding=new DynamicTexture('rival freight branding '+index,{width:1024,height:256},scene,false),ctx=branding.getContext() as CanvasRenderingContext2D;
-  ctx.fillStyle=index?'#c09048':'#d7ddd9';ctx.fillRect(0,0,1024,256);ctx.fillStyle='#202c36';ctx.font='italic bold 105px Arial';ctx.fillText(index?'STORM FREIGHT':'NORDIC FREIGHT',44,132);ctx.font='26px Arial';ctx.fillText('HEAVY HAUL / EUROPEAN LOGISTICS',49,194);branding.update();
-  const decal=material('side identity',index?'#c09048':'#d7ddd9',.6);decal.albedoTexture=branding;
+  ctx.fillStyle=identity.color;ctx.fillRect(0,0,1024,256);ctx.fillStyle='#202c36';ctx.font='italic bold 105px Arial';ctx.fillText(identity.name+' FREIGHT',44,132);ctx.font='26px Arial';ctx.fillText('HEAVY HAUL / EUROPEAN LOGISTICS',49,194);branding.update();
+  const decal=material('side identity',identity.color,.6);decal.albedoTexture=branding;
   for(const side of [-1,1]){const panel=MeshBuilder.CreatePlane('trailer side brand',{width:7.4,height:1.85},scene);panel.position.set(side*1.281,2.84,.3);panel.rotation.y=side*Math.PI/2;panel.material=decal;panel.parent=root;}
   // Merge static components by material; retain only a few draw calls per articulated trailer.
   for(const m of new Set(parts.map(p=>p.material))){const merged=Mesh.MergeMeshes(parts.filter(p=>p.material===m),true,true);if(merged){merged.parent=root;merged.receiveShadows=true;}}
