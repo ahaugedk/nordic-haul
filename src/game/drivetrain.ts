@@ -1,7 +1,7 @@
-import { AXLES,engineFor,type TruckConfig } from '../data/catalog';
+import { AXLES,CRAWLER_SPEC,engineFor,type TruckConfig } from '../data/catalog';
 export const MAX_SPEED=33.3;
 export const TRAILER_EMPTY_MASS=6500; // Generic game estimate; not an OEM specification.
-export function transportMass(truck:TruckConfig,tonnes:number){return AXLES.find(a=>a.id===truck.axle)!.mass+TRAILER_EMPTY_MASS+tonnes*1000;}
+export function transportMass(truck:TruckConfig,tonnes:number){return AXLES.find(a=>a.id===truck.axle)!.mass+(truck.crawler?CRAWLER_SPEC.addedMass:0)+TRAILER_EMPTY_MASS+tonnes*1000;}
 /** Simplified driveline: engine kW -> tractive power, launch traction limit, rolling resistance, aero drag and grade. */
 export function accelerationFor(truck:TruckConfig,tonnes:number,speed:number,grade:number,throttle:boolean,brake:boolean){
   const e=engineFor(truck),mass=transportMass(truck,tonnes);

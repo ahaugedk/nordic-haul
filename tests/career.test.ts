@@ -5,7 +5,7 @@ import { freshCareer,buyConfiguration,settleRace,loadCareer,saveCareer } from '.
 test('a purchase deducts only the configuration difference and refuses debt',()=>{
   const career=freshCareer(),upgrade={...career.truck,engine:'D17A780' as const};
   const bought=buyConfiguration(career,upgrade)!;
-  assert.equal(bought.funds,career.funds-140000);
+  assert.equal(bought.funds,career.funds-120000);
   assert.equal(career.truck.engine,'D17A600');
   assert.equal(buyConfiguration({...career,funds:100},upgrade),null);
   const back=buyConfiguration(bought,career.truck)!;assert.equal(back.funds,career.funds);
@@ -19,5 +19,5 @@ test('career survives reload and malformed saves are rejected',()=>{
   const c=settleRace(freshCareer(),42000,1,false).career;saveCareer(c,storage);assert.deepEqual(loadCareer(storage),c);
   stored='{"version":1,"funds":-1}';assert.deepEqual(loadCareer(storage),freshCareer());
   assert.equal(validConfig({...DEFAULT_CONFIG,color:'invented paint'}),false);
-  assert.equal(priceFor(DEFAULT_CONFIG),1223000);
+  assert.equal(priceFor(DEFAULT_CONFIG),1168000);
 });

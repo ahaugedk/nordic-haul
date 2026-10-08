@@ -67,3 +67,7 @@ UI clicks, pointer hover, keyboard focus, scrolling, viewer gestures, touch driv
 
 
 The larger hill profile is shared by road, terrain, guardrails, truck camera and articulated rivals. Launch tractive force now scales with actual engine torque rather than total vehicle mass, so adding payload cannot add free launch force. At higher speed, engine kW limits traction; gravity, rolling resistance and drag determine the climb's sustained speed. The values are simplified gameplay estimates. A Rapier regression starting at 72 km/h on the steep climb verifies a meaningful speed drop at full throttle, a payload penalty and a 780 hp advantage. Downhill coasting gains speed. Tender bonus times are adjusted for the longer loop.
+
+## Garage information and catalog audit
+
+The `VOLVO-INFO` card beside the garage's hp/Nm/gear figures follows the last selected component. It covers engine operating ranges, the linked I-Shift, ASO-C crawler data, cab heights, axle layout, mirrors, lights, interior and paint, with an official Volvo link for each. On small screens it opens as a compact details panel. The catalog was rechecked on 8 October 2026; the audit and price-calibration documents record sources and unresolved full-order dependencies. Pricing labels in the UI are ordinary game prices excluding VAT. Existing wallet balances and owned configurations survive the recalibration.
