@@ -18,6 +18,7 @@ import { isMobileLayout } from './game/mobileLayout';
 import { prepareImpactPreview } from './game/impactPreview';
 import { prepareLanePreview,driveLanePreview } from './game/lanePreview';
 import { prepareTerminalPreview } from './game/terminalPreview';
+import { prepareSignPreview } from './game/signPreview';
 
 const app=document.querySelector<HTMLDivElement>('#app')!;
 const canvas=document.querySelector<HTMLCanvasElement>('#scene')!;
@@ -35,6 +36,7 @@ const dispatchAudio=new DispatchAudio();
 const impactPreview=import.meta.env.DEV?new URLSearchParams(location.search).get('impactPreview'):null;
 const lanePreview=import.meta.env.DEV?new URLSearchParams(location.search).has('lanePreview'):false;
 const terminalPreview=import.meta.env.DEV?new URLSearchParams(location.search).get('terminalPreview'):null;
+const signPreview=import.meta.env.DEV?new URLSearchParams(location.search).get('signPreview'):null;
 let impactPreviewFrames=0;
 dispatchAudio.onStateChange=()=>syncAudioControls();
 let soundEnabled=true;
@@ -104,6 +106,7 @@ async function startRace(){
   if(import.meta.env.DEV&&impactPreview){prepareImpactPreview(sim,impactPreview);impactPreviewFrames=0;}
   if(import.meta.env.DEV&&lanePreview)prepareLanePreview(sim);
   if(import.meta.env.DEV&&terminalPreview){prepareTerminalPreview(sim,terminalPreview.startsWith('night'),terminalPreview==='finish');raceMusic.pause();}
+  if(import.meta.env.DEV&&signPreview){prepareSignPreview(sim,signPreview==='night',signPreview==='lap');raceMusic.pause();}
   accumulator=0;view.setRoute(cityFor(chosen.origin).name,cityFor(chosen.destination).name,chosen.distance);view.setMode('race');view.updateRace(sim.snapshot());render();updateHUD(sim.snapshot());
   if(import.meta.env.DEV&&terminalPreview?.endsWith('overview'))view.showTerminalArrival();
   if(soundEnabled)void unlockAudio().catch(()=>{});

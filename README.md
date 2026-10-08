@@ -102,3 +102,11 @@ Development-only `?terminalPreview=day`, `night` and `overview` fixtures exercis
 ## Starting-budget balance
 
 New careers receive DKK 1,200,000 including the first truck. The default DKK 1,168,000 setup leaves DKK 32,000: at most two of its four optional equipment add-ons. Keeping this reserve, one strong delivery can fund the 700 hp upgrade and two can fund 780 hp. Catalog prices and payouts are unchanged; cheaper chassis/cab choices remain valid ways to afford more engine or equipment. Unspent pre-purchase grants adopt the new balance on reload. Purchased trucks and established career balances remain intact.
+
+## Overhead route signs
+
+Five or six blue gantries appear roughly every 500–550 metres on the fictional Autobahn, with destination, terminal distance and a straight-ahead arrow. Gantries within 110 metres of the route's terminal gate are omitted. Their posts/foundations sit outside the shoulder and the board clears the road by 6.3 metres, including on bends and hills. Hardware is batched; each board has one reusable texture, initialized before garage readiness and repainted only when its reading changes.
+
+Distances refer to the compressed playable race route, not the approximate real-world kilometres shown on the Europe contracts. Each reading measures from that gantry to the actual finish, including the grid origin and remaining laps. Values round to 0.1 km, switching to ten-metre precision below 1 km. A just-passed reading stays unchanged for 65 metres to prevent the board jumping to the next lap while driving underneath. No negative distance is displayed. Boards remain readable at night and pause preserves their reading.
+
+Local-only `?signPreview=day`, `night` or `lap` fixtures exercise the actual route state and board rendering. Choose a longer contract for the second-lap fixture. Production builds remove these setup branches.

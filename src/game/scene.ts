@@ -11,6 +11,7 @@ import { RIVALS } from './raceField';
 import { isMobileLayout,isAppleMobile,previewFrame } from './mobileLayout';
 import { CollisionSparks } from './collisionSparks';
 import { buildTerminal,terminalLayout,terminalGroundHeight,terminalSceneryClearance,type LogisticsTerminal } from './terminal';
+import { RouteSigns } from './routeSigns';
 
 export class TruckScene {
   engine:Engine|WebGPUEngine;scene:Scene;garage:TransformNode;motorway:TransformNode;
@@ -31,6 +32,7 @@ export class TruckScene {
   private terminal?:LogisticsTerminal;
   private arrivalCamera?:FreeCamera;
   private terrain?:Mesh;private terrainOriginal?:Float32Array;
+  private routeSigns!:RouteSigns;private routeTarget=TRACK_LENGTH;
   private constructor(engine:Engine|WebGPUEngine,public canvas:HTMLCanvasElement,backend:string){
     this.engine=engine;this.backend=backend;this.scene=new Scene(engine);this.scene.clearColor=new Color4(.035,.045,.06,1);
     this.sparks=new CollisionSparks(this.scene);
@@ -137,11 +139,7 @@ export class TruckScene {
       const lamp=this.box('motorway lamp',p.x+p.tz*2.8,p.y+9.85,p.z-p.tx*2.8,.9,.16,.4,bulb,this.motorway);lamp.rotation.y=p.yaw;
     }
     for(let i=0;i<2;i++){const light=new PointLight('nearby street lamp '+i,Vector3.Zero(),this.scene);light.diffuse=new Color3(1,.79,.5);light.range=38;light.intensity=0;this.streetLights.push(light);}
-    // Portal columns stand outside the shoulder; the sign clears all trucks vertically.
-    const p=atDistance(115),sign=this.label('AUTOBAHN   /   NORDIC HAUL',18,3.3,'#ffffff','#175595');
-    sign.position.set(p.x,p.y+9,p.z);sign.rotation.y=p.yaw+Math.PI;sign.parent=this.motorway;
-    for(const lane of [-11,11]){const q=atDistance(115,lane);this.box('sign portal pillar',q.x,q.y+5.7,q.z,.35,11.4,.35,steel,this.motorway);}
-    this.box('sign portal beam',p.x,p.y+11.3,p.z,23,.35,.35,steel,this.motorway).rotation.y=p.yaw;
+    this.routeSigns=new RouteSigns(this.scene,this.motorway);
     for(let i=0;i<4;i++){const q=atDistance(360+i*18,-10.5),sign=this.label('‹',2,2,'#121820','#fff3bc');sign.position.set(q.x,q.y+2,q.z);sign.rotation.y=q.yaw+Math.PI;sign.parent=this.motorway;}
     this.createDaySky();
   }
@@ -242,6 +240,7 @@ export class TruckScene {
   }
   setRoute(origin:string,destination:string,distance=1){
     this.origin=origin;this.destination=destination;this.drawDisplays(0,0,0);
+    this.routeTarget=TRACK_LENGTH*distance;this.routeSigns.configure(destination,distance);
     if(this.terminal){const old=this.terminal,meshes=old.root.getChildMeshes();this.nightMaterials=this.nightMaterials.filter(m=>!old.nightMaterials.includes(m));for(const light of this.headlights)light.excludedMeshes=light.excludedMeshes.filter(m=>!meshes.includes(m));old.root.dispose(false,true);}
     this.terminal=buildTerminal(this.scene,this.motorway,distance,destination,(...args)=>this.label(...args));this.nightMaterials.push(...this.terminal.nightMaterials);
     // Reserve the terminal's light budget for its own projectors and nearby yard lamps.
@@ -317,6 +316,7 @@ export class TruckScene {
     this.sparks.update(s);
     this.canvas.dataset.lastImpact=s.impacts.at(-1)?.kind??'';
     this.truck.position.set(s.x,s.y,s.z);this.truck.rotation.set(s.pitch,s.yaw,0);this.updateDaylight(s.elapsed,s.x,s.z);
+    this.routeSigns.update(this.routeTarget-s.remaining,dayCycle(s.elapsed).night);
     for(let i=0;i<s.ai.length;i++){this.opponents[i].position.set(s.ai[i].x,s.ai[i].y,s.ai[i].z);this.opponents[i].rotation.set(s.ai[i].pitch,s.ai[i].yaw,0);const t=s.ai[i].trailer;this.opponentTrailers[i].position.set(t.x,t.y,t.z);this.opponentTrailers[i].rotation.set(t.pitch,t.yaw,0);}
     const local=new Vector3(-.65,3.07+Math.min(0,this.currentCab)*.7+this.chassisDrop,.82),cos=Math.cos(s.yaw),sin=Math.sin(s.yaw);
     const pitchCos=Math.cos(s.pitch),pitchSin=Math.sin(s.pitch),forward=local.y*pitchSin+local.z*pitchCos;
