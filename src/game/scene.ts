@@ -8,7 +8,7 @@ import { buildTrailer } from './trailerModel';
 import { mirrorSurfaceUV,orientMirrorFeed } from './mirrorSurface';
 import type { RaceSnapshot } from './simulation';
 import { RIVALS } from './raceField';
-import { isMobileLayout } from './mobileLayout';
+import { isMobileLayout,isAppleMobile,previewFrame } from './mobileLayout';
 
 export class TruckScene {
   engine:Engine|WebGPUEngine;scene:Scene;garage:TransformNode;motorway:TransformNode;
@@ -22,6 +22,7 @@ export class TruckScene {
   private mirrors:{camera:FreeCamera;texture:RenderTargetTexture;side:number}[]=[];
   private destination='Hamburg';private origin='Aarhus';private interiorMode=false;
   private compactLayout=false;
+  private stageObserver?:ResizeObserver;private observedStage?:HTMLElement;private mobileFrame='';
   private skyMaterial?:ShaderMaterial;private headlights:SpotLight[]=[];private streetLights:PointLight[]=[];
   private lampPositions:Vector3[]=[];private nightMaterials:{material:PBRMaterial;color:Color3}[]=[];
   private constructor(engine:Engine|WebGPUEngine,public canvas:HTMLCanvasElement,backend:string){
@@ -39,7 +40,8 @@ export class TruckScene {
     this.cockpit=new FreeCamera('driver eye',Vector3.Zero(),this.scene);this.cockpit.minZ=.04;this.cockpit.maxZ=4000;this.cockpit.fov=1.12;
     this.garage=new TransformNode('garage',this.scene);this.motorway=new TransformNode('motorway',this.scene);this.buildGarage();this.buildMotorway();this.motorway.setEnabled(false);
     this.scene.activeCamera=this.orbit;
-    this.engine.setHardwareScalingLevel(Math.max(1,window.devicePixelRatio/1.4));
+    this.engine.setHardwareScalingLevel(isMobileLayout()?1:Math.max(1,window.devicePixelRatio/1.4));
+    this.stageObserver=new ResizeObserver(()=>this.layoutCamera());
     const resize=()=>{this.engine.resize();this.layoutCamera();};
     window.addEventListener('resize',resize);
     window.visualViewport?.addEventListener('resize',resize);
@@ -48,8 +50,8 @@ export class TruckScene {
   }
   static async create(canvas:HTMLCanvasElement){
     let engine:Engine|WebGPUEngine;let backend='WebGL 2';
-    try{if(await WebGPUEngine.IsSupportedAsync){const gpu=new WebGPUEngine(canvas,{antialias:true});try{await gpu.initAsync();engine=gpu;backend='WebGPU';}catch{gpu.dispose();engine=new Engine(canvas,true);}}else engine=new Engine(canvas,true);}catch{engine=new Engine(canvas,true);}
-    const view=new TruckScene(engine,canvas,backend);await view.loadTruck();view.setMode('garage');return view;
+    try{if(!isAppleMobile(navigator.userAgent,navigator.maxTouchPoints)&&await WebGPUEngine.IsSupportedAsync){const gpu=new WebGPUEngine(canvas,{antialias:true});try{await gpu.initAsync();engine=gpu;backend='WebGPU';}catch{gpu.dispose();engine=new Engine(canvas,true);}}else engine=new Engine(canvas,true);}catch{engine=new Engine(canvas,true);}
+    const view=new TruckScene(engine,canvas,backend);await view.loadTruck();view.setMode('garage');await view.scene.whenReadyAsync();return view;
   }
   private createEnvironment(){
     const size=32;const faces=[];
@@ -291,32 +293,47 @@ export class TruckScene {
     for(const mirror of this.mirrors){const side=mirror.side;mirror.camera.position.set(s.x+side*1.44*cos+2.5*sin,s.y+3.3,s.z-side*1.44*sin+2.5*cos);mirror.camera.rotation.set(.08-s.pitch,s.yaw+Math.PI-side*.14,0);}
     this.displayTick+=1;if(this.displayTick%6===0)this.drawDisplays(s.speed,s.elapsed,s.progress);
   }
-  start(callback:(dt:number)=>void){this.engine.runRenderLoop(()=>{const dt=Math.min(this.engine.getDeltaTime()/1000,.1);this.elapsed+=dt;callback(dt);this.scene.render();this.canvas.dataset.fps=Math.round(this.engine.getFps()).toString();if(this.elapsed>5&&!document.hidden)this.slowFrames=dt>.04?this.slowFrames+1:Math.max(0,this.slowFrames-2);if(this.slowFrames>180&&this.quality==='balanced'){this.quality='performance';this.engine.setHardwareScalingLevel(Math.max(1.2,window.devicePixelRatio/1.2));this.shadow.getShadowMap()!.resize(512);}});}
+  start(callback:(dt:number)=>void){this.engine.runRenderLoop(()=>{const dt=Math.min(this.engine.getDeltaTime()/1000,.1);this.elapsed+=dt;callback(dt);this.scene.render();this.canvas.dataset.fps=Math.round(this.engine.getFps()).toString();if(this.elapsed>5&&!document.hidden)this.slowFrames=dt>.04?this.slowFrames+1:Math.max(0,this.slowFrames-2);if(this.slowFrames>180&&this.quality==='balanced'){this.quality='performance';this.engine.setHardwareScalingLevel(isMobileLayout()?1.2:Math.max(1.2,window.devicePixelRatio/1.2));this.shadow.getShadowMap()!.resize(512);}});}
   private inspectionFov(){return Math.max(1.02,Math.min(1.5,2*Math.atan(Math.tan(.80)/(innerWidth/innerHeight))));}
   refreshMobileLayout(){if(isMobileLayout())this.layoutCamera();}
   private layoutCamera(){
     if(!this.orbit)return;
     if(isMobileLayout()){
       const stage=this.mode==='garage'?document.querySelector<HTMLElement>('.garage-stage'):null;
+      for(const camera of [this.orbit,this.cockpit]){camera.viewport.x=0;camera.viewport.y=0;camera.viewport.width=1;camera.viewport.height=1;}
       if(stage){
-        const r=stage.getBoundingClientRect(),top=r.top+48,height=Math.max(60,r.height-54);
-        for(const camera of [this.orbit,this.cockpit]){camera.viewport.x=r.left/innerWidth;camera.viewport.width=r.width/innerWidth;camera.viewport.y=(innerHeight-top-height)/innerHeight;camera.viewport.height=height/innerHeight;}
+        if(this.observedStage!==stage){this.stageObserver?.disconnect();this.stageObserver?.observe(stage);this.observedStage=stage;}
+        const frame=previewFrame(stage.getBoundingClientRect());if(!frame)return;
+        const signature=JSON.stringify(frame),changed=signature!==this.mobileFrame;
+        if(changed){
+          // Resize the actual canvas instead of rendering into an offset sub-viewport.
+          // This avoids mixing Safari layout/visual viewport and high-DPR coordinates.
+          for(const [property,value] of Object.entries(frame))this.canvas.style.setProperty(property,value+'px','important');
+          this.canvas.style.setProperty('right','auto','important');this.canvas.style.setProperty('bottom','auto','important');
+          this.mobileFrame=signature;this.engine.resize();
+        }
         this.orbit.lowerRadiusLimit=6;this.orbit.upperRadiusLimit=14;
-        const fit=Math.max(8.4,9*height/r.width);
-        if(!this.compactLayout||Math.abs(this.orbit.target.y-1.85)>.01)this.orbit.radius=fit;
+        const fit=Math.max(8.4,9*frame.height/frame.width);
+        if(changed||!this.compactLayout||Math.abs(this.orbit.target.y-1.85)>.01)this.orbit.radius=fit;
         this.orbit.target.set(0,1.85,0);
-        if(this.interiorMode)this.cockpit.fov=Math.max(1.02,Math.min(1.7,2*Math.atan(Math.tan(.8)/(r.width/height))));
+        if(this.interiorMode)this.cockpit.fov=Math.max(1.02,Math.min(1.7,2*Math.atan(Math.tan(.8)/(frame.width/frame.height))));
       }else{
-        this.orbit.viewport.x=0;this.orbit.viewport.y=0;this.orbit.viewport.width=1;this.orbit.viewport.height=1;
-        this.cockpit.viewport.x=0;this.cockpit.viewport.y=0;this.cockpit.viewport.width=1;this.cockpit.viewport.height=1;
+        this.clearMobileFrame();
       }
       this.compactLayout=true;return;
     }
+    this.clearMobileFrame();
     this.orbit.lowerRadiusLimit=9;
     this.cockpit.viewport.x=0;this.cockpit.viewport.y=0;this.cockpit.viewport.width=1;this.cockpit.viewport.height=1;
     if(this.interiorMode)this.cockpit.fov=this.inspectionFov();
     this.orbit.viewport.x=0;this.orbit.viewport.width=innerWidth>=800&&this.mode==='garage'?.77:1;
     if(innerWidth<800){this.compactLayout=true;this.orbit.target.set(0,1.6,0);this.orbit.radius=15;this.orbit.viewport.y=this.mode==='garage'?.34:0;this.orbit.viewport.height=this.mode==='garage'?.66:1;}
     else{this.orbit.radius=Math.max(11,11/(innerWidth/innerHeight*.77));this.orbit.upperRadiusLimit=Math.max(19,this.orbit.radius+5);this.compactLayout=false;this.orbit.target.set(0,1.95,0);this.orbit.viewport.y=0;this.orbit.viewport.height=1;}
+  }
+  private clearMobileFrame(){
+    this.stageObserver?.disconnect();this.observedStage=undefined;
+    if(!this.mobileFrame)return;
+    for(const property of ['left','top','width','height','right','bottom'])this.canvas.style.removeProperty(property);
+    this.mobileFrame='';this.engine.resize();
   }
 }
