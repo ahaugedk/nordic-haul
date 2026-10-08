@@ -52,10 +52,10 @@ test('scenery envelopes keep houses, roofs and tree crowns outside both carriage
   for(let i=0;i<26;i++){const p=atDistance(i/26*TRACK_LENGTH,i%2?-70:90);assert.ok(sceneryClearance(p.x,p.z,13+i%4*2,16));}
   for(let i=0;i<240;i++){const p=atDistance(i/240*TRACK_LENGTH,(i%2?-1:1)*(42+(i*37%160))),radius=3.5+i%3;if(sceneryClearance(p.x,p.z,radius*2,radius*2,12)){const n=nearestTrack(p.x,p.z);assert.ok(Math.min(Math.abs(n.lane),Math.abs(n.lane-23))>ROAD_HALF_WIDTH+radius+12);}}
 });
-test('day clock runs 2.5 days per minute with repeated nights and headlights at dusk',()=>{
-  assert.equal(DAY_SECONDS,24);assert.equal(dayCycle(0).hour,8);assert.equal(dayCycle(12).hour,20);assert.equal(dayCycle(12).night,true);
-  assert.equal(dayCycle(24).hour,8);assert.equal(dayCycle(24).day,2);assert.equal(dayCycle(60).day,3);assert.equal(dayCycle(60).hour,20);
-  assert.equal(dayCycle(0).night,false);assert.equal(dayCycle(36).night,true);
+test('slower sky runs 1.5 days per minute with repeated nights and headlights at dusk',()=>{
+  assert.equal(DAY_SECONDS,40);assert.equal(dayCycle(0).hour,8);assert.equal(dayCycle(20).hour,20);assert.equal(dayCycle(20).night,true);
+  assert.equal(dayCycle(40).hour,8);assert.equal(dayCycle(40).day,2);assert.equal(dayCycle(60).day,2);assert.equal(dayCycle(60).hour,20);
+  assert.equal(dayCycle(0).night,false);assert.equal(dayCycle(100).night,true);
 });
 
 test('a long eleven-percent climb visibly loses speed under full throttle, and payload/power change the outcome',()=>{

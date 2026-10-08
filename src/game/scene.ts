@@ -3,6 +3,7 @@ import '@babylonjs/loaders/glTF';
 import { cabFor,FINISHES,type TruckConfig } from '../data/catalog';
 import { TRACK,TRACK_LENGTH,TERRAIN_SIZE,TERRAIN_SEGMENTS,atDistance,terrainHeight,sceneryClearance } from './track';
 import { dayCycle } from './dayCycle';
+import { SKY_FRAGMENT_SHADER } from './skyShader';
 import { buildTrailer } from './trailerModel';
 import { mirrorSurfaceUV,orientMirrorFeed } from './mirrorSurface';
 import type { RaceSnapshot } from './simulation';
@@ -134,7 +135,7 @@ export class TruckScene {
     this.createDaySky();
   }
   private createDaySky(){
-    this.skyMaterial=new ShaderMaterial('moving day sky',this.scene,{vertexSource:`precision highp float;attribute vec3 position;uniform mat4 worldViewProjection;varying vec3 direction;void main(){direction=position;gl_Position=worldViewProjection*vec4(position,1.0);}`,fragmentSource:`precision highp float;varying vec3 direction;uniform float daylight;uniform float twilight;uniform vec3 sunDirection;void main(){vec3 d=normalize(direction);float h=max(d.y,0.0);vec3 night=mix(vec3(.028,.043,.09),vec3(.008,.015,.042),pow(h,.45));vec3 day=mix(vec3(.63,.76,.82),vec3(.16,.39,.69),pow(h,.55));vec3 sky=mix(night,day,daylight);sky+=twilight*vec3(.5,.15,.045)*pow(1.0-h,5.0);float sunDot=dot(d,sunDirection);sky+=vec3(1.0,.82,.5)*smoothstep(.9988,.9996,sunDot)*daylight;sky+=vec3(.17,.15,.08)*pow(max(sunDot,0.0),32.0)*daylight;float star=fract(sin(dot(floor(d.xz*440.0/(.25+abs(d.y))),vec2(12.9898,78.233)))*43758.5453);sky+=vec3(.7,.8,1.0)*smoothstep(.9975,1.0,star)*(1.0-daylight)*smoothstep(.02,.3,h);gl_FragColor=vec4(sky,1.0);}`},{attributes:['position'],uniforms:['worldViewProjection','daylight','twilight','sunDirection']});
+    this.skyMaterial=new ShaderMaterial('moving day sky',this.scene,{vertexSource:`precision highp float;attribute vec3 position;uniform mat4 worldViewProjection;varying vec3 direction;void main(){direction=position;gl_Position=worldViewProjection*vec4(position,1.0);}`,fragmentSource:SKY_FRAGMENT_SHADER},{attributes:['position'],uniforms:['worldViewProjection','daylight','twilight','sunDirection']});
     this.skyMaterial.backFaceCulling=false;this.skyMaterial.disableDepthWrite=true;
     this.skybox=MeshBuilder.CreateSphere('accelerated day and night',{diameter:5000,segments:16},this.scene);this.skybox.material=this.skyMaterial;this.skybox.infiniteDistance=true;this.skybox.isPickable=false;this.skybox.setEnabled(false);
   }

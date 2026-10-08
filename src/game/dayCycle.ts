@@ -1,5 +1,6 @@
-/** One full day per 24 real seconds: 2.5 days per minute of unpaused race time. */
-export const DAY_SECONDS=24;
+/** The sky clock is independent of route distance, race time and bonus deadlines. */
+export const DAY_SECONDS=40;
+export const DAY_CYCLE_LABEL=`${(60/DAY_SECONDS).toLocaleString('da-DK')} DØGN / MINUT`;
 export function dayCycle(elapsed:number){
   const totalHours=8+elapsed/DAY_SECONDS*24,hour=totalHours%24,day=1+Math.floor(totalHours/24);
   const sun=Math.sin((hour-6)/24*Math.PI*2);
