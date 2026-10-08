@@ -9,7 +9,7 @@ Geometrien er projiceret til et Mercator-udsnit af Europa og gemt som kompakte S
 
 Startby: Aarhus. Hver by har tre udgående kontrakter. Et afsluttet løb opdaterer karrierens `currentCity` til destinationen sammen med betalingen. Et afbrudt løb ændrer hverken by eller indtjening. Næste kontrakter beregnes fra den nye by. Placering og penge gemmes lokalt.
 
-Baggrundsmusik og UI-lyde er en original generativ Web Audio-komposition. Den aktiveres ved brugerens første valg af kontraktkortet; lydknappen kan slå den til og fra. Musikken spiller i menuerne og garagen og fades ud under løb. Startsignaler og menulyde bruger deres egen lydkanal, men følger samme lydknap. Motorlyden har sin egen knap. Animationer reduceres ved `prefers-reduced-motion`.
+Baggrundsmusik og UI-lyde er en original generativ Web Audio-komposition. Den aktiveres ved brugerens første klik eller tastetryk. Radioen spiller i menuerne, garagen og under løb, hvor den mikses lidt lavere. HAUL FM, REDLINE og NIGHT DRIVE kan vælges med radioknapperne; under løb skifter N kanal og M pauser musikken. Radiolydstyrke, UI-effekter og motorlyd styres separat og huskes lokalt. Startsignaler og menulyde følger UI-lydknappen. Animationer reduceres ved `prefers-reduced-motion`.
 
 Første version kører alle valgte byruter som komprimerede løb på samme 3D-motorvejsbane. Europakortet og den vedvarende rejse er implementeret; geografisk korrekte 3D-vejstrækninger mellem byerne kræver separat baneproduktion og vejdata.
 

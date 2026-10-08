@@ -15,7 +15,7 @@ Open http://127.0.0.1:5173/. `npm test` exercises the career economy, persistent
 
 W / Up: throttle; S / Down: brake; A/D or Left/Right: steering; R: return to the road; Escape: pause. Touch controls appear on small screens. Garage exterior: drag to orbit and scroll to zoom. The `Førerhus` button opens an interior inspection camera; drag to look around. `Vis konfiguration` reopens the options while inspecting the cockpit.
 
-The map plays an original generative electronic garage soundtrack and UI sounds after a user gesture; the sound button toggles them. Race engine audio is a separate opt-in control.
+Original procedural music and UI effects start after the first pointer or keyboard interaction. Radio plays continuously in garage, contracts, races and results. UI effects, radio and motor audio have independent controls, with settings saved locally. N switches to the next station during a race; M pauses/resumes radio. Use the radio buttons for previous/next station and the slider for volume.
 
 ## Rendering and models
 
@@ -41,7 +41,7 @@ Lighting assets: Poly Haven Studio Small 09 and Kloppenheim 06 Pure Sky, CC0. Ma
 
 ## Arcade visual direction
 
-The racing skin uses locally hosted Barlow fonts, black and signal-yellow menus, a darker pit environment and a condensed italic game wordmark. The race HUD has start cues, live route progress and speed-dependent visual effects. Original procedural electronic music plays in menus; UI, countdown and finish cues respect the sound toggle. Reduced-motion preferences disable decorative motion and camera speed effects.
+The racing skin uses locally hosted Barlow fonts, black and signal-yellow menus, a darker pit environment and a condensed italic game wordmark. The race HUD has start cues, live route progress and speed-dependent visual effects. Original procedural music plays in menus and races; UI, countdown and finish cues respect the separate UI sound toggle. Reduced-motion preferences disable decorative motion and camera speed effects.
 
 ## Autobahn, cargo and accelerated days
 
@@ -58,3 +58,9 @@ A full day lasts 24 real seconds: 2.5 days per minute of unpaused race simulatio
 Published as **Nordic Haul** at https://nordic-haul.ahaugedk.chatgpt.site.
 
 The workspace root is the canonical GitHub development checkout. Its `.openai/hosting.json` identifies the existing Nordic Haul Site; use the Sites source-opening/publishing workflow from this directory for hosted changes. The earlier `sites/nordic-haul/` publication checkout is retained locally and ignored by Git to avoid a nested repository and duplicate assets. The first published version includes the Autobahn, cargo, day/night and rival semi-trailer updates. Credentials are not stored in the project.
+
+## Game radio and UI audio
+
+Three original synthesized stations: **HAUL FM** (110 BPM synthwave), **REDLINE** (144 BPM electro), and **NIGHT DRIVE** (92 BPM downtempo). There are no external radio streams or audio downloads. A lookahead scheduler uses the audio clock to keep music steady across render-frame changes. Channel changes stop the previous score's sustained notes, and resuming a hidden tab skips missed beats. Music fades to a slightly lower mixing level during driving, without stopping or resetting the station.
+
+UI clicks, pointer hover, keyboard focus, scrolling, viewer gestures, touch driving buttons, radio/volume changes, pause/reset, countdown and finish have feedback. Effects follow the UI sound setting. Background and race music, motor audio and UI effects can be muted independently. Channel, radio volume and all three sound settings persist under `nordic-haul-audio-v1`. Autoplay remains subject to the browser's initial-user-gesture requirement; the radio shows “KLIK FOR LYD” until unlocked. Hidden tabs suspend audio; gameplay pause keeps the radio available.
