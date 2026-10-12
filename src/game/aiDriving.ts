@@ -26,13 +26,15 @@ export class RivalPath {
     return {...p,yaw:Math.atan2(after.x-before.x,after.z-before.z)};
   }
   changing(s:number){const last=this.changes.at(-1);return !!last&&s<last.end+22;}
+  targetLane(){return this.changes.at(-1)?.to??this.initial;}
   envelope(s:number):Pick<TrafficVehicle,'minLane'|'maxLane'>{
     const lanes=[this.laneAt(s),this.laneAt(s-22)];
     const last=this.changes.at(-1);if(last&&s<last.end+22)lanes.push(last.from,last.to);
     return {minLane:Math.min(...lanes),maxLane:Math.max(...lanes)};
   }
   change(s:number,to:number,speed:number,time:number){
-    this.changes.push({start:s,end:s+Math.max(48,speed*4.5),from:this.laneAt(s),to});
+    const from=this.laneAt(s),span=Math.max(1,Math.abs(to-from)/3.5);
+    this.changes.push({start:s,end:s+Math.max(48,speed*4.5)*span,from,to});
     this.nextDecision=time+11;
     // Retain the last path segment behind the entire trailer across lap boundaries.
     while(this.changes.length>1&&this.changes[0].end<s-50)this.initial=this.changes.shift()!.to;

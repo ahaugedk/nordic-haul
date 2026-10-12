@@ -1,4 +1,4 @@
-export type ImpactKind='guardrail'|'truck'|'trailer';
+export type ImpactKind='guardrail'|'truck'|'trailer'|'roadwork';
 export type Impact={id:number;time:number;kind:ImpactKind;x:number;y:number;z:number;nx:number;nz:number;strength:number;speedLost:number};
 export function collisionPenalty(speed:number,closing:number,tangent:number,fresh:boolean,dt:number){
   const strike=fresh?Math.min(speed*.58,.7+closing*.45+Math.max(0,speed-4)*.06):0;

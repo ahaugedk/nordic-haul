@@ -56,6 +56,10 @@ class FakeMedia {
   play(){this.plays++;if(this.rejectNext){this.rejectNext=false;return Promise.reject(new Error('Blocked'));}this.paused=false;return Promise.resolve();}
   pause(){this.pauses++;this.paused=true;}
 }
+test('traffic chime follows the one master sound flag',async()=>withAudio(async(audio,ctx)=>{
+  await audio.unlock();const before=ctx.sources.length;audio.traffic();assert.equal(ctx.sources.length,before+2);
+  audio.setEnabled(false);audio.traffic();assert.equal(ctx.sources.length,before+2);
+}));
 test('supplied song starts only at race start and repeats from the beginning for a new race',async()=>{
   const media=new FakeMedia(),music=new RaceMusic(media);
   assert.equal(media.plays,0);assert.equal(media.paused,true);music.start();assert.equal(media.plays,1,'play must be invoked synchronously in the start gesture');
