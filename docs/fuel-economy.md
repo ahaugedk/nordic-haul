@@ -35,3 +35,13 @@ Ved 15 % af startdieselen vises advarsel, ved 6 % kritisk farve. Tom diesel afsl
 ## Verifikation
 
 Automatiske tests kontrollerer vejafstandsdækning, planens størrelsesorden, korrekt liter/km-afregning, gas/slip-gas/tomgang, last/stigninger/fart, pause/nedtælling, R uden opfyldning, stop ved tom tank, nulbetaling og bonus ved levering. Eksisterende kørsels- og vejarbejdstests kræver nu både målpassage og brændstof tilbage, så et brændstofnederlag ikke kan blive godkendt som gennemført løb. Browser-QA kontrollerer cockpit, kontraktvalg, reserveadvarsel, nederlag, afregning og telefonlayout; mobiltesten er Chromium-emulering, ikke en fysisk Safari/iPhone-test.
+
+## Rækkevidde og afstand til mål
+
+Cockpitskærmen og HUD'en viser forventet rækkevidde ved siden af de resterende vejkilometer. Afstand til mål bruger samme skala og validerede fremskridt som vejskiltene, også fra en tilfældig startplads, på længere løb og ved baglæns kørsel. Den falder ikke ved at køre en genvej uden for vejen.
+
+Rækkevidde = liter tilbage × 100 / forventet L/100 km. Det forventede forbrug er hele turens distancevægtede gennemsnit, inklusive tomgang, med de første 20 km vægtet mod startplanens 36 + 0,25 × lastton L/100 km. Der er en nedre grænse på 18 L/100 km for prognosen: et øjebliks 0-forbrug på nedkørslen giver aldrig uendelig rækkevidde. Prognosen tilpasser sig kørestilen; den forudsiger ikke fremtidige højdeforløb eller trafik. Startprisen, dieselallokeringen, bonus, faktiske forbrug og løbslængde er uændrede.
+
+Grøn betyder, at den beregnede rækkevidde har en buffer til mål. Gul betyder, at bufferen er mindre end 5 km eller 5 % af afstanden til mål (det største af de to). Rød betyder kortere rækkevidde end afstand til mål og viser “KØR MERE ØKONOMISK” med råd om at sænke farten og slippe gas nedad. Første røde advarsel giver én lyd pr. løb gennem den eksisterende masterlydknap. Den kombineres med en samtidig reserveadvarsel, så lydene ikke stables. Pause, nedtælling og afsluttede løb udsender ingen nye brændstofsignaler.
+
+Rækkevidde rundes ned, afstand til mål op; under 10 km vises en decimal. De grønne/gule/røde statusbeskeder opdateres kun ved statusskift i live-regionen, mens km-tal løbende opdateres uden at blive læst op hele tiden. Mobilpanelet holder afstandstallene samlet ved fartmåleren. Lokale `?fuelPreview=range-short` og `range-tight` scener kontrollerer begge advarsler med den rigtige beregning og cockpittekstur, og fjernes fra produktionsbygget.

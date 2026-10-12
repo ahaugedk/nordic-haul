@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import { DEFAULT_CONFIG } from '../src/data/catalog.ts';
 import { CITIES,cityFor,approximateRoadKm,tendersFrom,withLoad } from '../src/data/europe.ts';
-import { FuelMeter,fuelDemand,startFuel,virtualRoadKm,economyBonus } from '../src/game/fuel.ts';
+import { FuelMeter,fuelDemand,startFuel,virtualRoadKm,economyBonus,projectFuel,rangeKilometres } from '../src/game/fuel.ts';
 import { Simulation,initPhysics } from '../src/game/simulation.ts';
 import { atDistance,nearestTrack } from '../src/game/track.ts';
 import { buyConfiguration,freshCareer,settleRace,failRace } from '../src/game/career.ts';
@@ -69,4 +69,37 @@ test('real Rapier light and heavy trips finish economically with credible averag
  for(const s of [light,heavy]){assert.equal(s.progress,1);assert.equal(s.fuel.empty,false);assert.ok(s.fuel.remaining>10);assert.ok(s.elapsed<job.par);}
  assert.ok(light.fuel.average>=20&&light.fuel.average<=28);assert.ok(heavy.fuel.average>=29&&heavy.fuel.average<=40);assert.ok(heavy.fuel.used>light.fuel.used);
  for(const tonnes of [8,24]){const waste=run(tonnes,false);assert.equal(waste.done,true);assert.equal(waste.fuel.empty,true);assert.ok(waste.progress<1);}
+});
+
+
+test('range compares estimated kilometres with the destination, not tank percentage',()=>{
+ const safe=projectFuel(140,0,0,38,340);assert.equal(safe.rangeStatus,'sufficient');assert.ok(Math.abs(safe.rangeKm-140/38*100)<1e-9);
+ const short=projectFuel(90,50,100,38,260);assert.equal(short.rangeStatus,'short');assert.ok(short.marginKm<0);assert.ok(short.rangeKm<short.toGoalKm);
+ const tight=projectFuel(120,0,0,40,298);assert.equal(tight.rangeStatus,'tight');assert.equal(tight.rangeKm,300);
+ assert.equal(projectFuel(0,100,100,38,10).rangeStatus,'short');assert.equal(projectFuel(0,100,100,38,0).rangeStatus,'sufficient');
+});
+test('range uses a stable distance-weighted mean and never infinite instantaneous coasting range',()=>{
+ const meter=new FuelMeter(DEFAULT_CONFIG,job,3000);
+ for(let i=0;i<30;i++)meter.step(.1,10,20,.02,true,false);
+ const before=meter.snapshot();for(let i=0;i<60;i++)meter.step(1/60,.3,25,-.05,false,false);
+ const after=meter.snapshot();assert.equal(after.remaining,before.remaining);assert.ok(Number.isFinite(after.rangeKm));assert.ok(after.rangeKm/before.rangeKm<1.04);
+ const overrun=projectFuel(100,0,500,38,100);assert.equal(overrun.forecastConsumption,18);assert.ok(overrun.rangeKm<560);
+});
+test('cockpit remaining kilometres match contract progression across random rows and different lap counts',()=>{
+ for(const random of [()=>0,()=>.5,()=>.99])for(const tender of tendersFrom('aarhus')){
+  const sim=new Simulation(DEFAULT_CONFIG,tender,random,{roadworks:false}),initial=sim.grid.player.distance-80;
+  assert.ok(Math.abs(sim.snapshot().fuel.toGoalKm-tender.roadKm)<1e-9);
+  sim.progress.distance=initial+(sim.target-initial)*.4;sim.progress.nextGate=sim.target;
+  assert.ok(Math.abs(sim.snapshot().fuel.toGoalKm-tender.roadKm*.6)<1e-9);
+  sim.progress.distance=sim.target;assert.equal(sim.snapshot().fuel.toGoalKm,0);sim.dispose();
+ }
+});
+test('range formatting does not overstate range or understate the final approach',()=>{
+ assert.equal(rangeKilometres(249.9),'249');assert.equal(rangeKilometres(250.1,true),'251');
+ assert.equal(rangeKilometres(.59),'0,5');assert.equal(rangeKilometres(.51,true),'0,6');assert.equal(rangeKilometres(0,true),'0,0');
+});
+
+test('forecast recovers after economical driving without refilling diesel',()=>{
+ const before=projectFuel(90,50,100,38,260),after=projectFuel(85,55,180,38,180);
+ assert.equal(before.rangeStatus,'short');assert.equal(after.rangeStatus,'sufficient');assert.ok(after.rangeKm>before.rangeKm);
 });

@@ -147,3 +147,23 @@
  .fuel-figures{gap:7px}.fuel-figures span{font-size:7px;letter-spacing:0}.fuel-figures strong{font-size:23px}
  .fuel-pay{font-size:8px;gap:4px}.minimap{bottom:calc(204px + env(safe-area-inset-bottom,0px))}
 }
+@media(max-width:799px),(max-height:500px) and (pointer:coarse){
+ .fuel-range{gap:7px;padding-top:5px;margin-top:5px}.fuel-range span{font-size:7px;letter-spacing:0}.fuel-range strong{font-size:25px;margin:3px 0 5px}
+ .fuel-route-message{padding:5px 6px;margin-bottom:6px}.fuel-route-message strong{font-size:9px;letter-spacing:0}.fuel-route-message span{font-size:9px;margin-top:3px}
+}
+@media(max-width:799px) and (orientation:portrait){
+ .minimap{left:12px;right:auto}
+ .fuel-range strong{font-size:23px}.fuel-route-message strong{font-size:8px}.fuel-route-message span{font-size:8px}
+}
+@media(max-width:799px) and (orientation:landscape),(max-height:500px) and (pointer:coarse) and (orientation:landscape){
+ .fuel-hud{left:120px;right:auto;bottom:calc(85px + env(safe-area-inset-bottom,0px));width:180px;padding:6px 8px}
+ .fuel-hud-top{font-size:6px;letter-spacing:0}.fuel-hud-top #fuel-mode{letter-spacing:0}
+ .fuel-figures{gap:6px;margin:4px 0}.fuel-figures span,.fuel-range span{font-size:6px;letter-spacing:0}.fuel-figures strong{font-size:19px}
+ .fuel-range{padding-top:4px;margin-top:4px}.fuel-range strong{font-size:21px;margin:2px 0 4px}
+ .fuel-route-message{padding:4px 5px;margin-bottom:4px}.fuel-route-message strong,.fuel-route-message span{font-size:7px}.fuel-route-message span{margin-top:2px}.fuel-pay{font-size:7px;margin-top:4px}
+ .minimap{left:auto;right:12px;bottom:calc(85px + env(safe-area-inset-bottom,0px))}
+ .traffic-notice{left:320px;right:auto;transform:none;width:255px;top:calc(56px + env(safe-area-inset-top,0px));padding:6px 9px}
+ .traffic-notice>strong{font-size:18px}.traffic-notice>p{font-size:10px}
+ body[data-traffic=active] .race-environment{top:calc(57px + env(safe-area-inset-top,0px))}
+}
+@media(max-width:699px) and (orientation:landscape){body[data-traffic=active] .race-environment{display:none}}

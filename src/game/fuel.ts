@@ -2,11 +2,26 @@ import { engineFor,type TruckConfig,type Tender } from '../data/catalog';
 import { transportMass } from './drivetrain';
 export const ECO_PAY_PER_LITRE=50;
 export type FuelMode='idle'|'coast'|'climb'|'steady'|'waste';
-export type FuelSnapshot={remaining:number;start:number;used:number;percent:number;instant:number|null;hourly:number;average:number;mode:FuelMode;empty:boolean};
+export type RangeStatus='sufficient'|'tight'|'short';
+export type FuelProjection={rangeKm:number;toGoalKm:number;marginKm:number;forecastConsumption:number;rangeStatus:RangeStatus};
+export type FuelSnapshot=FuelProjection&{remaining:number;start:number;used:number;percent:number;instant:number|null;hourly:number;average:number;mode:FuelMode;empty:boolean};
 export function virtualRoadKm(tender:Tender){const value=(tender as Tender&{roadKm?:number}).roadKm;return value&&Number.isFinite(value)&&value>0?value:tender.distance*360;}
+export function plannedConsumption(tender:Tender){return 36+tender.tonnes*.25;}
 /** Trip fuel allowance, not an OEM tank-capacity specification. */
-export function startFuel(tender:Tender){return Math.ceil((virtualRoadKm(tender)*(.36+tender.tonnes*.0025)+10)/5)*5;}
+export function startFuel(tender:Tender){return Math.ceil((virtualRoadKm(tender)*plannedConsumption(tender)/100+10)/5)*5;}
 export function economyBonus(litres:number){return Math.floor(Math.max(0,Number.isFinite(litres)?litres:0)*ECO_PAY_PER_LITRE);}
+/** Distance-weighted trip average with a 20 km prior; overrun never means infinite range. */
+export function projectFuel(litres:number,used:number,distanceKm:number,baseline:number,toGoalKm:number):FuelProjection{
+  const forecastConsumption=Math.max(18,(Math.max(0,used)*100+baseline*20)/(Math.max(0,distanceKm)+20));
+  const rangeKm=Math.max(0,litres)*100/forecastConsumption,goal=Math.max(0,toGoalKm),marginKm=rangeKm-goal;
+  const rangeStatus:RangeStatus=goal>0&&marginKm<0?'short':goal>0&&marginKm<Math.max(5,goal*.05)?'tight':'sufficient';
+  return {rangeKm,toGoalKm:goal,marginKm,forecastConsumption,rangeStatus};
+}
+/** Conservative display: round range down, distance to delivery up. */
+export function rangeKilometres(km:number,goal=false){
+  const scale=km<10?10:1,value=(goal?Math.ceil:Math.floor)(Math.max(0,km)*scale)/scale;
+  return value.toLocaleString('da-DK',{minimumFractionDigits:scale===10?1:0,maximumFractionDigits:scale===10?1:0});
+}
 /** Calibrated game consumption: load, grade, speed and pedal choice matter. */
 export function fuelDemand(truck:TruckConfig,tonnes:number,speed:number,grade:number,throttle:boolean,brake:boolean){
   const mass=transportMass(truck,tonnes),kph=speed*3.6;
@@ -22,7 +37,7 @@ export function fuelDemand(truck:TruckConfig,tonnes:number,speed:number,grade:nu
 export class FuelMeter {
   readonly start:number;readonly scale:number;remaining:number;distanceKm=0;
   private current:number|null=null;private hourly=2;private mode:FuelMode='idle';private smoothed=0;
-  constructor(private truck:TruckConfig,private tender:Tender,physicalMetres:number,private enabled=true){
+  constructor(private truck:TruckConfig,private tender:Tender,private physicalMetres:number,private enabled=true){
     this.start=startFuel(tender);this.remaining=this.start;this.scale=virtualRoadKm(tender)/(Math.max(1,physicalMetres)/1000);
   }
   step(dt:number,metres:number,speed:number,grade:number,throttle:boolean,brake:boolean){
@@ -34,8 +49,8 @@ export class FuelMeter {
     this.remaining=Math.max(0,this.remaining-burn);
   }
   get empty(){return this.enabled&&this.remaining<=1e-6;}
-  snapshot():FuelSnapshot{
+  snapshot(physicalRemaining=Math.max(0,this.physicalMetres-this.distanceKm/this.scale*1000)):FuelSnapshot{
     const used=this.start-this.remaining;
-    return {remaining:this.remaining,start:this.start,used,percent:Math.max(0,Math.min(1,this.remaining/this.start)),instant:this.current,hourly:this.hourly,average:this.distanceKm>.1?used/this.distanceKm*100:0,mode:this.mode,empty:this.empty};
+    return {...projectFuel(this.remaining,used,this.distanceKm,plannedConsumption(this.tender),physicalRemaining/1000*this.scale),remaining:this.remaining,start:this.start,used,percent:Math.max(0,Math.min(1,this.remaining/this.start)),instant:this.current,hourly:this.hourly,average:this.distanceKm>.1?used/this.distanceKm*100:0,mode:this.mode,empty:this.empty};
   }
 }
