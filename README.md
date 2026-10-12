@@ -134,3 +134,6 @@ Local-only `?fuelPreview=coast`, `climb`, `reserve`, `empty` and `finish` scenes
 
 
 Closed-throttle rolling now uses extra damping calibrated for compressed racing time. From 90 km/h on a level road, the default truck reaches approximately 68 km/h with 8 t cargo or 72 km/h with 24 t after ten seconds without gas. This is game calibration, not an OEM tyre or engine-brake specification; powered acceleration is unchanged. Zero-injection coasting remains possible, and gravity still matters downhill. Both the player and rivals use the same calibration. Local-only `?fuelPreview=roll` exercises a real ten-second unpowered run; see [calibration and measurements](docs/fuel-economy.md).
+
+
+Mobile race HUD: roadwork reports temporarily occupy the placement/time/progress slot instead of stacking below it. The lower speed and fuel/distance panels share height and styling. Mobile hides the minimap, extra route bar, economy advice and live eco-payment row; the cab screen also omits those economy messages. Range colours, consumption and actual payments remain available. Desktop layout and data are unchanged. Browser QA covers small portrait and landscape viewports and checks panel alignment, hidden elements and normal race status restoration.

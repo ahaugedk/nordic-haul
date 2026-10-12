@@ -167,3 +167,37 @@
  body[data-traffic=active] .race-environment{top:calc(57px + env(safe-area-inset-top,0px))}
 }
 @media(max-width:699px) and (orientation:landscape){body[data-traffic=active] .race-environment{display:none}}
+
+/* One roadwork slot above the windshield; two equally sized driving panels below. */
+@media(max-width:799px),(max-height:500px) and (pointer:coarse){
+ :root{--mobile-driving-panel:100px}
+ .race-route,.minimap,.fuel-hud-top,.fuel-route-message,.fuel-pay,.fuel-gauge{display:none}
+ body[data-traffic=active] .race-status{display:none}
+ .driver-hud,.fuel-hud{height:var(--mobile-driving-panel);bottom:calc(88px + env(safe-area-inset-bottom,0px));margin:0;padding:8px 10px;background:#101720d9;border:0;border-left:3px solid var(--race);box-shadow:none;border-radius:0}
+ .driver-hud{left:12px;width:126px;min-width:0;max-width:none;display:flex;flex-direction:column;justify-content:space-between;gap:2px}
+ .driver-hud>strong{font-size:44px;line-height:1}.driver-hud>span{font-size:7px;letter-spacing:.6px}.driver-hud>div{font-size:8px}.driver-hud small{font-size:10px}
+ .fuel-hud{left:148px;right:12px;width:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:1fr 1fr;gap:5px 9px}
+ .fuel-hud .fuel-figures,.fuel-hud .fuel-range{display:contents;margin:0;padding:0;border:0}
+ .fuel-hud .fuel-figures>div,.fuel-hud .fuel-range>div{min-width:0;display:flex;flex-direction:column;justify-content:center}
+ .fuel-hud .fuel-figures span:not(.fuel-mobile-label),.fuel-hud .fuel-range span:not(.fuel-mobile-label){display:none}
+ .fuel-hud .fuel-figures .fuel-mobile-label,.fuel-hud .fuel-range .fuel-mobile-label{display:block;font-size:7px;line-height:1;letter-spacing:.4px;color:#a8b9c5}
+ .fuel-hud .fuel-figures strong,.fuel-hud .fuel-range strong{font-size:22px;line-height:1.05;margin:3px 0 0;white-space:nowrap}
+ .traffic-notice{top:calc(62px + env(safe-area-inset-top,0px));left:12px;right:12px;transform:none;width:auto;height:68px;padding:7px 9px;display:grid;grid-template-columns:minmax(0,1fr) 62px;grid-template-rows:auto auto;column-gap:10px;row-gap:1px;border-left-width:3px}
+ .traffic-notice[hidden]{display:none}.traffic-label,.traffic-advice{display:none}
+ .traffic-notice>strong{grid-column:1;grid-row:1;margin:0;font-size:18px;line-height:1.1;align-self:end;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .traffic-notice>p{grid-column:1;grid-row:2;font-size:11px;line-height:1.2;margin:2px 0 0;align-self:start}
+ .traffic-lane-row{grid-column:2;grid-row:1 / 3;flex-direction:column;justify-content:center;gap:4px}
+ .traffic-lanes{gap:3px}.traffic-lanes i{width:15px;height:17px;font-size:15px}.traffic-limit{font-size:19px;line-height:1}.traffic-limit small{font-size:8px}
+ body[data-traffic=active] .race-environment{top:calc(151px + env(safe-area-inset-top,0px))}
+}
+@media(max-width:359px) and (orientation:portrait){
+ .driver-hud{width:110px}.fuel-hud{left:132px;padding:8px;gap:5px 6px}.fuel-hud .fuel-figures strong,.fuel-hud .fuel-range strong{font-size:18px}
+}
+@media(max-width:799px) and (orientation:landscape),(max-height:500px) and (pointer:coarse) and (orientation:landscape){
+ :root{--mobile-driving-panel:88px}
+ .driver-hud,.fuel-hud{bottom:calc(85px + env(safe-area-inset-bottom,0px));padding:7px 10px}
+ .driver-hud{width:110px}.driver-hud>strong{font-size:40px}.fuel-hud{left:134px;right:auto;width:250px}
+ .fuel-hud .fuel-figures strong,.fuel-hud .fuel-range strong{font-size:21px}
+ .traffic-notice{top:calc(56px + env(safe-area-inset-top,0px));left:12px;right:auto;width:300px;height:66px}
+ body[data-traffic=active] .race-environment{display:flex;top:calc(57px + env(safe-area-inset-top,0px))}
+}

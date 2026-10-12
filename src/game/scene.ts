@@ -278,18 +278,21 @@ export class TruckScene {
     ctx.strokeStyle='#29363c';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(35,345);ctx.lineTo(989,345);ctx.stroke();ctx.fillStyle='#a6bcc4';ctx.font='17px Arial';ctx.fillText(this.destination,190,377);ctx.fillStyle=fuel&&fuel.percent<.15?'#ff8b59':'#a6bcc4';ctx.fillText(fuel?`DIESEL ${fuel.remaining<10?fuel.remaining.toFixed(1):Math.floor(fuel.remaining)} L`:'DIESEL  ▰▰▰▰▱',512,377);if(fuel){ctx.fillStyle='#283b42';ctx.fillRect(390,387,244,7);ctx.fillStyle=fuel.percent<.15?'#ff754f':'#dcff00';ctx.fillRect(390,387,244*fuel.percent,7);}ctx.fillStyle='#a6bcc4';ctx.fillText(`${Math.floor(elapsed/60)}:${Math.floor(elapsed%60).toString().padStart(2,'0')}`,840,377);this.instruments.update(false);
     const nav=this.navigation.getContext() as CanvasRenderingContext2D;nav.fillStyle='#10191e';nav.fillRect(0,0,1024,640);nav.fillStyle='#d7e1e5';nav.textAlign='left';nav.font='34px Arial';nav.fillText(`${this.origin} → ${this.destination}`,55,70);nav.fillStyle='#6e8791';nav.font='21px Arial';nav.fillText('NORDIC HAUL / TRANSPORT',55,109);
     if(fuel){
+      const mobile=isMobileLayout();
       const routeColor=fuel.rangeStatus==='short'?'#ff805c':fuel.rangeStatus==='tight'?'#ffc568':'#dcff00';
       nav.fillStyle='#92a7b1';nav.font='27px Arial';nav.fillText('FORVENTET RÆKKEVIDDE',55,162);nav.fillText('AFSTAND TIL MÅL',550,162);
       nav.font='bold 75px Arial';nav.fillStyle=routeColor;nav.fillText(rangeKilometres(fuel.rangeKm),55,245);nav.fillStyle='#edf5f5';nav.fillText(rangeKilometres(fuel.toGoalKm,true),550,245);
       nav.font='25px Arial';nav.fillStyle='#92a7b1';nav.fillText('KM',55,282);nav.fillText('KM',550,282);
-      nav.fillStyle='#22333f';nav.fillRect(40,303,944,81);nav.fillStyle=routeColor;nav.font='bold 32px Arial';
-      nav.fillText(fuel.rangeStatus==='short'?'KØR MERE ØKONOMISK':fuel.rangeStatus==='tight'?'LILLE RESERVE TIL MÅL':'DIESELEN RÆKKER TIL MÅL',55,338);
-      nav.font='23px Arial';nav.fillText(fuel.rangeStatus==='sufficient'?'Beregnet fra forbruget hidtil':'Slip gas nedad og sænk farten',55,370);
-      nav.fillStyle='#b2c4cd';nav.font='24px Arial';nav.fillText('DIESEL TILBAGE',55,424);nav.fillText('FORBRUG NU',550,424);
-      nav.fillStyle=fuel.percent<.15?'#ff805c':'#dcff00';nav.font='bold 39px Arial';nav.fillText((fuel.remaining<10?fuel.remaining.toFixed(1):Math.floor(fuel.remaining).toString())+' L',55,472);
-      nav.fillStyle='#edf5f5';nav.fillText((fuel.instant===null?fuel.hourly.toFixed(0):fuel.instant.toFixed(1))+(fuel.instant===null?' L/T':' L/100 KM'),550,472);
-      nav.fillStyle='#273d47';nav.fillRect(55,492,915,10);nav.fillStyle=routeColor;nav.fillRect(55,492,915*fuel.percent,10);
-      nav.fillStyle='#d9e7ec';nav.font='25px Arial';nav.fillText('ØKOBONUS + '+economyBonus(fuel.remaining).toLocaleString('da-DK')+' KR.',55,542);
+      if(!mobile){
+        nav.fillStyle='#22333f';nav.fillRect(40,303,944,81);nav.fillStyle=routeColor;nav.font='bold 32px Arial';
+        nav.fillText(fuel.rangeStatus==='short'?'KØR MERE ØKONOMISK':fuel.rangeStatus==='tight'?'LILLE RESERVE TIL MÅL':'DIESELEN RÆKKER TIL MÅL',55,338);
+        nav.font='23px Arial';nav.fillText(fuel.rangeStatus==='sufficient'?'Beregnet fra forbruget hidtil':'Slip gas nedad og sænk farten',55,370);
+      }
+      nav.fillStyle='#b2c4cd';nav.font='24px Arial';nav.fillText('DIESEL TILBAGE',55,mobile?340:424);nav.fillText('FORBRUG NU',550,mobile?340:424);
+      nav.fillStyle=fuel.percent<.15?'#ff805c':'#dcff00';nav.font='bold 39px Arial';nav.fillText((fuel.remaining<10?fuel.remaining.toFixed(1):Math.floor(fuel.remaining).toString())+' L',55,mobile?400:472);
+      nav.fillStyle='#edf5f5';nav.fillText((fuel.instant===null?fuel.hourly.toFixed(0):fuel.instant.toFixed(1))+(fuel.instant===null?' L/T':' L/100 KM'),550,mobile?400:472);
+      nav.fillStyle='#273d47';nav.fillRect(55,mobile?434:492,915,10);nav.fillStyle=routeColor;nav.fillRect(55,mobile?434:492,915*fuel.percent,10);
+      if(!mobile){nav.fillStyle='#d9e7ec';nav.font='25px Arial';nav.fillText('ØKOBONUS + '+economyBonus(fuel.remaining).toLocaleString('da-DK')+' KR.',55,542);}
     }else{nav.strokeStyle='#26363b';nav.lineWidth=28;nav.beginPath();nav.moveTo(120,480);nav.bezierCurveTo(600,430,350,200,830,220);nav.stroke();nav.strokeStyle='#a5c9d2';nav.lineWidth=9;nav.stroke();nav.fillStyle='#cbb77b';nav.beginPath();nav.arc(120+progress*710,480-progress*260,14,0,Math.PI*2);nav.fill();}nav.fillStyle='#d8e4e6';nav.font='bold 45px Arial';nav.fillText(`${Math.round(progress*100)} %`,fuel?835:675,fuel?547:515);nav.strokeStyle='#3b4c52';nav.lineWidth=1;nav.beginPath();nav.moveTo(40,564);nav.lineTo(984,564);nav.stroke();nav.font='22px Arial';nav.fillStyle='#7f959e';for(let i=0;i<4;i++)nav.fillText(['NAV','MEDIA','TRUCK','SETTINGS'][i],60+i*240,608);this.navigation.update(false);
   }
   configure(c:TruckConfig){

@@ -42,7 +42,7 @@ Cockpitskærmen og HUD'en viser forventet rækkevidde ved siden af de resterende
 
 Rækkevidde = liter tilbage × 100 / forventet L/100 km. Det forventede forbrug er hele turens distancevægtede gennemsnit, inklusive tomgang, med de første 20 km vægtet mod startplanens 36 + 0,25 × lastton L/100 km. Der er en nedre grænse på 18 L/100 km for prognosen: et øjebliks 0-forbrug på nedkørslen giver aldrig uendelig rækkevidde. Prognosen tilpasser sig kørestilen; den forudsiger ikke fremtidige højdeforløb eller trafik. Startprisen, dieselallokeringen, bonus, faktiske forbrug og løbslængde er uændrede.
 
-Grøn betyder, at den beregnede rækkevidde har en buffer til mål. Gul betyder, at bufferen er mindre end 5 km eller 5 % af afstanden til mål (det største af de to). Rød betyder kortere rækkevidde end afstand til mål og viser “KØR MERE ØKONOMISK” med råd om at sænke farten og slippe gas nedad. Første røde advarsel giver én lyd pr. løb gennem den eksisterende masterlydknap. Den kombineres med en samtidig reserveadvarsel, så lydene ikke stables. Pause, nedtælling og afsluttede løb udsender ingen nye brændstofsignaler.
+Grøn betyder, at den beregnede rækkevidde har en buffer til mål. Gul betyder, at bufferen er mindre end 5 km eller 5 % af afstanden til mål (det største af de to). Rød betyder kortere rækkevidde end afstand til mål. Desktop viser “KØR MERE ØKONOMISK” med råd om at sænke farten og slippe gas nedad; mobil bruger farven på rækkeviddetallet uden denne besked. Første røde advarsel giver én lyd pr. løb gennem den eksisterende masterlydknap. Den kombineres med en samtidig reserveadvarsel, så lydene ikke stables. Pause, nedtælling og afsluttede løb udsender ingen nye brændstofsignaler.
 
 Rækkevidde rundes ned, afstand til mål op; under 10 km vises en decimal. De grønne/gule/røde statusbeskeder opdateres kun ved statusskift i live-regionen, mens km-tal løbende opdateres uden at blive læst op hele tiden. Mobilpanelet holder afstandstallene samlet ved fartmåleren. Lokale `?fuelPreview=range-short` og `range-tight` scener kontrollerer begge advarsler med den rigtige beregning og cockpittekstur, og fjernes fra produktionsbygget.
 
@@ -65,3 +65,14 @@ Det betyder, at jævn fart på plan vej kræver tilbagevendende gas, mens tunger
 Prøvechaufføren giver nu også gas, hvis farten kommer under cirka 58 km/t på en svag nedkørsel, i stedet for at forbyde gas på alle negative stigninger. De økonomiske prøver i tabellen ovenfor er opdateret til denne styrepolitik og dæmpning. Standardmotoren med tung last leverer stadig, men denne økonomiske prøve når ikke tidsbonus inden 3:00. Det er et valg mellem fart og økobonus, ikke en ændring af tidsgrænsen eller rutelængden.
 
 To nye regressionsprøver kontrollerer farttab og masseeffekt på plan vej samt virkelige, kollisionsfrie Rapier-trucks på motorvejens næsten flade bakketop. Alle løbs- og vejarbejdsgennemførelser testes stadig. Lokal `?fuelPreview=roll` starter ved 90 km/t uden gas, holder trucken i banen med styringen og fryser efter ti sekunder; den bruger den faktiske simulation og fjernes fra produktion.
+
+
+## Kompakt HUD på mobil
+
+Under kørsel vises kun to instrumentpaneler nederst: hastighed og et panel med diesel, forbrug, rækkevidde og kilometer til mål. De deler højde, baggrund, kant og bundlinje: 100 CSS-pixel i portræt og 88 i landskab. Lange desktopoverskrifter erstattes af korte mobiloverskrifter; enhederne følger tallene, også L/t ved tomgang.
+
+Mobilens HUD viser hverken banekort, separat rute-progressionsbjælke, økobonuslinje eller økonomibeskrivelse. Kabinens skærm viser heller ikke økonomibesked eller økobonus i mobilvisningen. Bonusberegningen og resultatets afregning er bevaret.
+
+Vejarbejde erstatter midlertidigt placering/tid/rute i det øverste HUD-felt. Meldingen er 68 CSS-pixel høj i portræt (66 i landskab) og beholder navn, fletteanvisning, lukkede spor og anbefalet fart. Når der ikke er en trafikmelding, vises løbstallene igen. Dag/stigning flyttes ikke længere ned under en stor meldingsboks. Desktop beholder sit eksisterende layout og sine oplysninger.
+
+Visuel QA og aflæsning af de faktisk renderede elementer dækker 390×844, 375×667, 320×667 og 768×375 samt desktop. Kontrollen verificerer ens top/bund/højde på instrumentpanelerne og skjulte kort/beskeder/bonus samt, at trafikmeldingen og løbstallene ikke vises oven på hinanden. Mobilkontrollen er browseremulering med touch og iPhone-user-agent, ikke en fysisk Safari-test.

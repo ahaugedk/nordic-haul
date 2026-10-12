@@ -88,3 +88,4 @@ body[data-mode="results"] .tender-backdrop{background:linear-gradient(90deg,#071
 .fuel-hud[data-range=tight] .fuel-route-message{background:#342d1c}
 .fuel-hud{--range-color:var(--race)}.fuel-hud[data-range=tight]{--range-color:#ffc568}.fuel-hud[data-range=short]{--range-color:#ff795c}
 .fuel-range #fuel-range,.fuel-route-message strong{color:var(--range-color)}.fuel-route-message{border-left-color:var(--range-color)}
+.fuel-figures .fuel-mobile-label,.fuel-range .fuel-mobile-label{display:none}
