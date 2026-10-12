@@ -7,8 +7,8 @@ export const TRACK_STRAIGHT=980;
 const STRAIGHT=TRACK_STRAIGHT, HALF_STRAIGHT=STRAIGHT/2, ARC=Math.PI*TRACK_RX;
 export const TRACK_LENGTH=2*STRAIGHT+2*ARC;
 const wrap=(s:number)=>((s%TRACK_LENGTH)+TRACK_LENGTH)%TRACK_LENGTH;
-export function elevationAt(s:number){const t=wrap(s)/TRACK_LENGTH*Math.PI*2;return 70+35*Math.sin(t-.9)+11*Math.sin(2*t-.8);}
-export function gradeAt(s:number){const t=wrap(s)/TRACK_LENGTH*Math.PI*2;return (35*Math.cos(t-.9)+22*Math.cos(2*t-.8))*Math.PI*2/TRACK_LENGTH;}
+export function elevationAt(s:number){const t=wrap(s)/TRACK_LENGTH*Math.PI*2;return 70+45*Math.sin(t-.9)+8*Math.sin(2*t-.8);}
+export function gradeAt(s:number){const t=wrap(s)/TRACK_LENGTH*Math.PI*2;return (45*Math.cos(t-.9)+16*Math.cos(2*t-.8))*Math.PI*2/TRACK_LENGTH;}
 export function atDistance(distance:number,lane=0){
   let s=wrap(distance),x:number,z:number,tx:number,tz:number;
   if(s<STRAIGHT){x=TRACK_RX;z=-HALF_STRAIGHT+s;tx=0;tz=1;}

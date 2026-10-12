@@ -20,7 +20,7 @@ test('a controlled truck completes a full route against six collidable opponents
     let error=desired-snap.yaw;while(error>Math.PI)error-=2*Math.PI;while(error<-Math.PI)error+=2*Math.PI;
     sim.step({throttle:snap.speed<22,brake:snap.speed>23,left:error<-.035,right:error>.035});
   }
-  assert.ok(sim.done,`Route did not finish: ${JSON.stringify(sim.snapshot())}`);
+  assert.equal(sim.snapshot().fuel.empty,false);assert.equal(sim.snapshot().progress,1);assert.ok(sim.done,`Route did not finish: ${JSON.stringify(sim.snapshot())}`);
   assert.ok(sim.snapshot().elapsed>40);assert.equal(sim.world.bodies.len(),1+2*RIVALS.length);sim.dispose();
 });
 test('crossing the infield does not award a completed route',()=>{

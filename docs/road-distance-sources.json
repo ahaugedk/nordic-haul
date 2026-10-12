@@ -1,0 +1,241 @@
+{
+  "retrieved": "2026-10-12",
+  "source": "OSRM public routing service, OpenStreetMap driving profile",
+  "note": "Representative road-only city-to-city routes; not HGV navigation. Denmark/Sweden use Great Belt and Oresund; Stockholm-Warsaw uses the land route. Rounded to 10 km in the game.",
+  "routes": {
+    "aarhus:copenhagen": {
+      "metres": 307492.2,
+      "km": 310,
+      "via": [
+        [
+          10.3883,
+          55.4038
+        ]
+      ],
+      "url": "https://router.project-osrm.org/route/v1/driving/10.2039,56.1629;10.3883,55.4038;12.5683,55.6761?overview=false&steps=false"
+    },
+    "aarhus:gothenburg": {
+      "metres": 622216.3,
+      "km": 620,
+      "via": [
+        [
+          10.3883,
+          55.4038
+        ],
+        [
+          12.5683,
+          55.6761
+        ]
+      ],
+      "url": "https://router.project-osrm.org/route/v1/driving/10.2039,56.1629;10.3883,55.4038;12.5683,55.6761;11.9746,57.7089?overview=false&steps=false"
+    },
+    "aarhus:hamburg": {
+      "metres": 340203.6,
+      "km": 340,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/10.2039,56.1629;9.9937,53.5511?overview=false&steps=false"
+    },
+    "aarhus:oslo": {
+      "metres": 913613.9,
+      "km": 910,
+      "via": [
+        [
+          10.3883,
+          55.4038
+        ],
+        [
+          12.5683,
+          55.6761
+        ]
+      ],
+      "url": "https://router.project-osrm.org/route/v1/driving/10.2039,56.1629;10.3883,55.4038;12.5683,55.6761;10.7522,59.9139?overview=false&steps=false"
+    },
+    "barcelona:lyon": {
+      "metres": 638948.5,
+      "km": 640,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/2.1734,41.3851;4.8357,45.764?overview=false&steps=false"
+    },
+    "barcelona:milan": {
+      "metres": 978922.9,
+      "km": 980,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/2.1734,41.3851;9.19,45.4642?overview=false&steps=false"
+    },
+    "barcelona:paris": {
+      "metres": 1036057.7,
+      "km": 1040,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/2.1734,41.3851;2.3522,48.8566?overview=false&steps=false"
+    },
+    "berlin:copenhagen": {
+      "metres": 761982.8,
+      "km": 760,
+      "via": [
+        [
+          9.9937,
+          53.5511
+        ],
+        [
+          10.3883,
+          55.4038
+        ]
+      ],
+      "url": "https://router.project-osrm.org/route/v1/driving/13.405,52.52;9.9937,53.5511;10.3883,55.4038;12.5683,55.6761?overview=false&steps=false"
+    },
+    "berlin:hamburg": {
+      "metres": 289849,
+      "km": 290,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/13.405,52.52;9.9937,53.5511?overview=false&steps=false"
+    },
+    "berlin:prague": {
+      "metres": 346344.1,
+      "km": 350,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/13.405,52.52;14.4378,50.0755?overview=false&steps=false"
+    },
+    "berlin:warsaw": {
+      "metres": 573270.2,
+      "km": 570,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/13.405,52.52;21.0122,52.2297?overview=false&steps=false"
+    },
+    "copenhagen:gothenburg": {
+      "metres": 314724.1,
+      "km": 310,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/12.5683,55.6761;11.9746,57.7089?overview=false&steps=false"
+    },
+    "copenhagen:hamburg": {
+      "metres": 472705,
+      "km": 470,
+      "via": [
+        [
+          10.3883,
+          55.4038
+        ]
+      ],
+      "url": "https://router.project-osrm.org/route/v1/driving/12.5683,55.6761;10.3883,55.4038;9.9937,53.5511?overview=false&steps=false"
+    },
+    "copenhagen:stockholm": {
+      "metres": 654005.3,
+      "km": 650,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/12.5683,55.6761;18.0686,59.3293?overview=false&steps=false"
+    },
+    "gothenburg:oslo": {
+      "metres": 293712.1,
+      "km": 290,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/11.9746,57.7089;10.7522,59.9139?overview=false&steps=false"
+    },
+    "gothenburg:stockholm": {
+      "metres": 467385.2,
+      "km": 470,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/11.9746,57.7089;18.0686,59.3293?overview=false&steps=false"
+    },
+    "hamburg:munich": {
+      "metres": 775929.3,
+      "km": 780,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/9.9937,53.5511;11.582,48.1351?overview=false&steps=false"
+    },
+    "hamburg:rotterdam": {
+      "metres": 501983.5,
+      "km": 500,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/9.9937,53.5511;4.4777,51.9244?overview=false&steps=false"
+    },
+    "lyon:milan": {
+      "metres": 444271.1,
+      "km": 440,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/4.8357,45.764;9.19,45.4642?overview=false&steps=false"
+    },
+    "lyon:paris": {
+      "metres": 466748.1,
+      "km": 470,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/4.8357,45.764;2.3522,48.8566?overview=false&steps=false"
+    },
+    "lyon:rotterdam": {
+      "metres": 856942.9,
+      "km": 860,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/4.8357,45.764;4.4777,51.9244?overview=false&steps=false"
+    },
+    "milan:munich": {
+      "metres": 495041.4,
+      "km": 500,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/9.19,45.4642;11.582,48.1351?overview=false&steps=false"
+    },
+    "milan:vienna": {
+      "metres": 832157.4,
+      "km": 830,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/9.19,45.4642;16.3738,48.2082?overview=false&steps=false"
+    },
+    "munich:prague": {
+      "metres": 381270.4,
+      "km": 380,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/11.582,48.1351;14.4378,50.0755?overview=false&steps=false"
+    },
+    "munich:vienna": {
+      "metres": 403411.7,
+      "km": 400,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/11.582,48.1351;16.3738,48.2082?overview=false&steps=false"
+    },
+    "oslo:stockholm": {
+      "metres": 523761.1,
+      "km": 520,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/10.7522,59.9139;18.0686,59.3293?overview=false&steps=false"
+    },
+    "paris:rotterdam": {
+      "metres": 444095.6,
+      "km": 440,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/2.3522,48.8566;4.4777,51.9244?overview=false&steps=false"
+    },
+    "prague:vienna": {
+      "metres": 333003.2,
+      "km": 330,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/14.4378,50.0755;16.3738,48.2082?overview=false&steps=false"
+    },
+    "stockholm:warsaw": {
+      "metres": 1991398.5,
+      "km": 1990,
+      "via": [
+        [
+          12.5683,
+          55.6761
+        ],
+        [
+          10.3883,
+          55.4038
+        ],
+        [
+          9.9937,
+          53.5511
+        ],
+        [
+          13.405,
+          52.52
+        ]
+      ],
+      "url": "https://router.project-osrm.org/route/v1/driving/18.0686,59.3293;12.5683,55.6761;10.3883,55.4038;9.9937,53.5511;13.405,52.52;21.0122,52.2297?overview=false&steps=false"
+    },
+    "vienna:warsaw": {
+      "metres": 671039.8,
+      "km": 670,
+      "via": [],
+      "url": "https://router.project-osrm.org/route/v1/driving/16.3738,48.2082;21.0122,52.2297?overview=false&steps=false"
+    }
+  }
+}

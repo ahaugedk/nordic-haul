@@ -35,7 +35,7 @@ The cockpit alignment pass follows `docs/reference/volvo-cockpit-wide.png`. The 
 
 This is a reference-based development prototype, not Volvo CAD or an OEM-validated configurator. The public FH16 Aero builder displayed a conflicting D13 engine list; the prototype uses Volvo's official D17 specifications. Supported garage options are a verified subset. Paint RGB, some dimensions and driving curves remain approximate. Prices are estimates excluding VAT, not dealer quotations.
 
-All city contracts use a compressed version of the same fictional, 3 km Autobahn loop with two 980 m straights, approximately 75 m of elevation difference and long climbs reaching 11%. The Europe map and persisted arrival city work, but actual intercity 3D road networks, a visible player trailer, live multiplayer and OEM adaptive high-beam behavior are not implemented. Automatic night headlights are implemented.
+All city contracts use a compressed version of the same fictional, 3 km Autobahn loop with two 980 m straights, approximately 90 m of elevation difference and long climbs reaching 13%. The Europe map and persisted arrival city work, but actual intercity 3D road networks, a visible player trailer, live multiplayer and OEM adaptive high-beam behavior are not implemented. Automatic night headlights are implemented.
 
 Lighting assets: Poly Haven Studio Small 09 and Kloppenheim 06 Pure Sky, CC0. Map geometry: Natural Earth, public domain. Music and model geometry are original.
 
@@ -122,3 +122,12 @@ Cones, portable flashing arrow boards, barriers and road equipment follow the ro
 Rivals anticipate closures, slow for the work area, create merging gaps and check crossed lanes before a double-lane move. Trailer paths and colliders follow each manoeuvre. Following-distance enforcement remains active; slow following reservations do not trap their leaders in a merge queue. A stopped truck can begin a required merge once a safe gap opens. Existing works remain obstacles for faster trucks lapping the field until the whole convoy has passed.
 
 Local-only `?roadworkPreview=zone`, `night`, `double`, `night-double` and `merge` fixtures use real event geometry, contacts and the AI planner. The merging fixture freezes a genuine mid-manoeuvre frame for browser QA. These branches are removed from production builds. Tests cover event variation/placement, warnings, collisions, mute/pause/reset, all six rivals passing three sites and a complete player-driven route through three closures.
+
+
+## Fuel economy
+
+Contracts supply a route/load-dependent diesel allowance, shown before departure. The cockpit and HUD show litres remaining, current L/100 km (L/h at low speed), low-fuel warnings and the potential eco payment. Coasting downhill and keeping speed moderate preserve diesel. Delivery pays an additional 50 game DKK per litre left; exhaustion stops the race, pays nothing and keeps the driver in the departure city. Retrying starts a new trip; R does not refill. Pausing/countdown consume no diesel.
+
+All 48 city contracts now use documented road distances instead of a straight-line multiplier. Fuel use and route signs use the same compressed kilometres; route length and time-bonus targets are unchanged. See [fuel calibration and sources](docs/fuel-economy.md) and [road-distance provenance](docs/road-distance-sources.json). The amounts and consumption are calibrated game estimates, not Volvo D17 engine maps or truck-approved navigation.
+
+Local-only `?fuelPreview=coast`, `climb`, `reserve`, `empty` and `finish` scenes exercise the actual cockpit displays, failure and payment paths. They are removed from production. Tests check real completed light/heavy drives, fuel-distance accounting, idle/coast/load/hill effects, pause/reset, failure and payment.

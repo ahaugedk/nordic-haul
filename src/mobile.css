@@ -132,3 +132,18 @@
 
 @media(max-width:799px),(max-height:500px) and (pointer:coarse){.traffic-notice{top:calc(126px + env(safe-area-inset-top,0px));left:12px;right:12px;width:auto;transform:none;padding:7px 10px}.traffic-label{font-size:8px;letter-spacing:.7px}.traffic-notice>strong{font-size:21px}.traffic-notice>p{font-size:11px;margin-bottom:4px}.traffic-lanes i{width:24px;height:22px;font-size:22px}.traffic-limit{font-size:23px}.traffic-limit small{font-size:9px}body[data-traffic=active] .race-environment{top:calc(259px + env(safe-area-inset-top,0px))}}
 @media(min-width:600px) and (max-height:500px) and (pointer:coarse){.traffic-notice{top:calc(56px + env(safe-area-inset-top,0px));left:50%;right:auto;width:255px;transform:translateX(-50%);padding:6px 9px}.traffic-notice>strong{font-size:18px}.traffic-notice>p{font-size:10px}.race-environment{top:calc(57px + env(safe-area-inset-top,0px))}}
+
+@media(max-width:799px),(max-height:500px) and (pointer:coarse){
+ .fuel-hud{left:12px;right:12px;bottom:calc(204px + env(safe-area-inset-bottom,0px));width:auto;padding:8px 10px;border-top-width:2px}
+ .fuel-hud-top{font-size:8px}.fuel-figures{margin:5px 0;gap:14px}.fuel-figures strong{font-size:25px;line-height:1}.fuel-figures span{font-size:8px}.fuel-pay{font-size:9px;margin-top:5px}
+ .fuel-plan{margin:5px 0 7px;padding-top:6px;gap:4px 10px}.fuel-plan span{font-size:7px}.fuel-plan strong{font-size:19px;margin-top:2px}.fuel-plan p{font-size:9px}
+}
+@media(min-width:600px) and (max-height:500px) and (pointer:coarse){
+ .fuel-hud{left:174px;right:auto;bottom:calc(85px + env(safe-area-inset-bottom,0px));width:250px}.fuel-hud-top{font-size:7px}.fuel-figures strong{font-size:23px}
+}
+@media(max-width:799px) and (orientation:portrait){
+ .fuel-hud{left:156px;bottom:calc(88px + env(safe-area-inset-bottom,0px));padding:8px;right:12px}
+ .fuel-hud-top{font-size:7px;letter-spacing:.3px}.fuel-hud-top #fuel-mode{letter-spacing:0}
+ .fuel-figures{gap:7px}.fuel-figures span{font-size:7px;letter-spacing:0}.fuel-figures strong{font-size:23px}
+ .fuel-pay{font-size:8px;gap:4px}.minimap{bottom:calc(204px + env(safe-area-inset-bottom,0px))}
+}

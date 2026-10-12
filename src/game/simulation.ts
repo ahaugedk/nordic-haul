@@ -7,8 +7,9 @@ import { GRID_ORIGIN,RIVALS,startingGrid } from './raceField';
 import { collisionPenalty,type Impact,type ImpactKind } from './impacts';
 import { RivalPath,chooseLane,sharesLane,signedGap as signedPhysicalGap,type TrafficVehicle } from './aiDriving';
 import { createRoadworks,roadworkObstacles,approachingWork,touchesClosure,workMergeLane,trafficReport,WORK_MERGE_STOP,WORK_WARNING,type Roadwork,type TrafficReport } from './roadworks';
+import { FuelMeter,type FuelSnapshot } from './fuel';
 export type Controls={throttle:boolean;brake:boolean;left:boolean;right:boolean};
-export type RaceSnapshot={speed:number;steering:number;elapsed:number;progress:number;remaining:number;place:number;startRow:number;offRoad:boolean;countdown:number;done:boolean;x:number;y:number;z:number;yaw:number;pitch:number;grade:number;impacts:Impact[];traffic:TrafficReport|null;ai:{x:number;y:number;z:number;yaw:number;pitch:number;trailer:TrailerPose}[]};
+export type RaceSnapshot={speed:number;steering:number;elapsed:number;progress:number;remaining:number;place:number;startRow:number;offRoad:boolean;countdown:number;done:boolean;x:number;y:number;z:number;yaw:number;pitch:number;grade:number;impacts:Impact[];fuel:FuelSnapshot;traffic:TrafficReport|null;ai:{x:number;y:number;z:number;yaw:number;pitch:number;trailer:TrailerPose}[]};
 export class Simulation {
   world:RAPIER.World;body:RAPIER.RigidBody;aiBodies:RAPIER.RigidBody[]=[];aiTrailerBodies:RAPIER.RigidBody[]=[];
   elapsed=0;countdown=3;speed=0;yaw=0;steering=0;progress=new RaceProgress();paused=false;done=false;
@@ -16,11 +17,13 @@ export class Simulation {
   private rivals:TruckConfig[];
   readonly aiPaths:RivalPath[];
   readonly worksites:Roadwork[];private workColliders:RAPIER.Collider[][]=[];
+  readonly fuel:FuelMeter;
   private colliderKinds=new Map<number,{key:string;kind:ImpactKind}>();private contactTimes=new Map<string,number>();private sparkTimes=new Map<string,number>();
   private impacts:Impact[]=[];private nextImpactId=1;
-  constructor(public truck:TruckConfig,public tender:Tender,random:()=>number=Math.random,options:{roadworks?:boolean}={}){
+  constructor(public truck:TruckConfig,public tender:Tender,random:()=>number=Math.random,options:{roadworks?:boolean;fuel?:boolean}={}){
     this.world=new RAPIER.World({x:0,y:0,z:0});this.world.timestep=1/60;this.target=TRACK_LENGTH*tender.distance;
     this.grid=startingGrid(random);this.rivals=RIVALS.map(r=>({...truck,engine:r.engine}));
+    this.fuel=new FuelMeter(truck,tender,this.target-(this.grid.player.distance-GRID_ORIGIN),options.fuel!==false);
     this.aiDistances=this.grid.rivals.map(s=>s.distance-GRID_ORIGIN);this.aiSpeeds=RIVALS.map(()=>0);
     this.aiPaths=this.grid.rivals.map((slot,i)=>{const path=new RivalPath(slot.lane);path.nextDecision=5+i*.65;return path;});
     this.worksites=options.roadworks===false?[]:createRoadworks(this.target,random);
@@ -123,7 +126,10 @@ export class Simulation {
     const n=nearestTrack(this.body.translation().x,this.body.translation().z);
     this.body.setTranslation({x:this.body.translation().x,y:n.y+1.9,z:this.body.translation().z},true);
     this.progress.advance(n.s,n.distance<ROAD_HALF_WIDTH);
-    if(this.progress.validatedDistance>=this.target)this.done=true;
+    const after=this.body.translation(),metres=Math.hypot(after.x-pos.x,after.z-pos.z);
+    this.fuel.step(dt,metres,this.speed,n.grade*alignment,input.throttle,input.brake);
+    if(this.fuel.empty){this.done=true;this.speed=0;this.body.setLinvel({x:0,y:0,z:0},true);}
+    else if(this.progress.validatedDistance>=this.target)this.done=true;
   }
   syncRoadworks(){
     const positions=[this.progress.validatedDistance,...this.aiDistances];
@@ -180,7 +186,7 @@ export class Simulation {
   snapshot():RaceSnapshot{
     const p=this.body.translation(),n=nearestTrack(p.x,p.z),frame=atDistance(n.s),alignment=Math.sin(this.yaw)*frame.tx+Math.cos(this.yaw)*frame.tz;
     const initial=this.grid.player.distance-GRID_ORIGIN;
-    return {speed:this.speed,steering:this.steering,elapsed:this.elapsed,progress:Math.min(1,Math.max(0,(this.progress.validatedDistance-initial)/(this.target-initial))),remaining:Math.max(0,this.target-this.progress.validatedDistance),place:1+this.aiDistances.filter(x=>x>this.progress.validatedDistance).length,startRow:this.grid.player.row,offRoad:n.distance>7.5,countdown:this.countdown,done:this.done,x:p.x,y:n.y,z:p.z,yaw:this.yaw,pitch:-Math.atan(n.grade*alignment),grade:n.grade*alignment,impacts:this.impacts.map(i=>({...i})),traffic:this.countdown>0?null:trafficReport(this.worksites,this.progress.validatedDistance),ai:this.aiDistances.map((s,i)=>{const distance=s+GRID_ORIGIN,path=this.aiPaths[i];return {...path.pose(distance),trailer:trailerPose(distance,path.laneAt(distance),s=>path.pose(s))};})};
+    return {speed:this.speed,steering:this.steering,elapsed:this.elapsed,progress:Math.min(1,Math.max(0,(this.progress.validatedDistance-initial)/(this.target-initial))),remaining:Math.max(0,this.target-this.progress.validatedDistance),place:1+this.aiDistances.filter(x=>x>this.progress.validatedDistance).length,startRow:this.grid.player.row,offRoad:n.distance>7.5,countdown:this.countdown,done:this.done,x:p.x,y:n.y,z:p.z,yaw:this.yaw,pitch:-Math.atan(n.grade*alignment),grade:n.grade*alignment,impacts:this.impacts.map(i=>({...i})),fuel:this.fuel.snapshot(),traffic:this.countdown>0?null:trafficReport(this.worksites,this.progress.validatedDistance),ai:this.aiDistances.map((s,i)=>{const distance=s+GRID_ORIGIN,path=this.aiPaths[i];return {...path.pose(distance),trailer:trailerPose(distance,path.laneAt(distance),s=>path.pose(s))};})};
   }
   dispose(){this.world.free();}
 }

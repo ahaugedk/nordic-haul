@@ -32,6 +32,7 @@ export class DispatchAudio {
   depart(){this.tone(196,.28,.12,0,'triangle');this.tone(392,.32,.07,.10,'triangle');this.tone(784,.4,.06,.20);}
   impact(strength:number){this.tone(95,.14,.11*strength,0,'sawtooth');this.tone(1600,.065,.07*strength,.015,'triangle');}
   traffic(){this.tone(880,.18,.09,0,'triangle');this.tone(660,.22,.07,.2,'triangle');}
+  failure(){this.tone(220,.3,.11,0,'triangle');this.tone(146,.5,.09,.25,'triangle');}
   countdown(n:number){this.tone(n===0?1046:523,n===0?.4:.15,.12);if(n===0)this.tone(1568,.24,.04,.10);}
   victory(won:boolean){const notes=won?[523,659,784,1046]:[392,523,659];notes.forEach((n,i)=>this.tone(n,.45,.09,i*.12,'triangle'));}
   dispose(){for(const voice of this.voices){try{voice.stop();}catch{}}this.voices.clear();if(this.ctx)void this.ctx.close();}

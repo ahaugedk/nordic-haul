@@ -14,6 +14,7 @@ import { buildTerminal,terminalLayout,terminalGroundHeight,terminalSceneryCleara
 import { RouteSigns } from './routeSigns';
 import { RoadworkScene } from './roadworkScene';
 import type { Roadwork } from './roadworks';
+import { economyBonus,type FuelSnapshot } from './fuel';
 
 export class TruckScene {
   engine:Engine|WebGPUEngine;scene:Scene;garage:TransformNode;motorway:TransformNode;
@@ -268,15 +269,22 @@ export class TruckScene {
     else{this.cockpit.detachControl();this.scene.activeCamera=this.orbit;this.orbit.attachControl(this.canvas,true);}
     this.refreshMobileLayout();
   }
-  private drawDisplays(speed:number,elapsed:number,progress:number){
+  private drawDisplays(speed:number,elapsed:number,progress:number,fuel?:FuelSnapshot){
     if(!this.instruments||!this.navigation)return;
     const ctx=this.instruments.getContext() as CanvasRenderingContext2D;
     ctx.fillStyle='#090f15';ctx.fillRect(0,0,1024,400);ctx.textAlign='center';ctx.fillStyle='#c7d6da';ctx.font='18px Arial';ctx.fillText('VOLVO FH16',140,35);ctx.fillText('I-SHIFT',885,35);
     const gauge=(x:number,label:string,value:string,units:string,color:string)=>{ctx.strokeStyle='#263741';ctx.lineWidth=8;ctx.beginPath();ctx.arc(x,200,123,Math.PI*.73,Math.PI*2.27);ctx.stroke();ctx.strokeStyle=color;ctx.lineWidth=4;ctx.beginPath();ctx.arc(x,200,123,Math.PI*.73,Math.PI*(1+Math.min(1,speed/33)));ctx.stroke();ctx.fillStyle='#e2eaeb';ctx.font=x===512?'bold 90px Arial':'bold 48px Arial';ctx.fillText(value,x,220);ctx.fillStyle='#91a7b1';ctx.font='19px Arial';ctx.fillText(units,x,255);ctx.font='14px Arial';ctx.fillText(label,x,295);};
     gauge(185,'MOTOR',(800+Math.round(speed%6*135)).toString(),'r/min','#b9dce4');gauge(512,'HASTIGHED',Math.round(speed*3.6).toString(),'km/h','#bed8d9');gauge(840,'I-SHIFT',Math.min(12,Math.max(1,Math.ceil(speed/3))).toString(),'D','#cfc48b');
-    ctx.strokeStyle='#29363c';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(35,345);ctx.lineTo(989,345);ctx.stroke();ctx.fillStyle='#a6bcc4';ctx.font='17px Arial';ctx.fillText(this.destination,190,377);ctx.fillText('DIESEL  ▰▰▰▰▱',512,377);ctx.fillText(`${Math.floor(elapsed/60)}:${Math.floor(elapsed%60).toString().padStart(2,'0')}`,840,377);this.instruments.update(false);
+    ctx.strokeStyle='#29363c';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(35,345);ctx.lineTo(989,345);ctx.stroke();ctx.fillStyle='#a6bcc4';ctx.font='17px Arial';ctx.fillText(this.destination,190,377);ctx.fillStyle=fuel&&fuel.percent<.15?'#ff8b59':'#a6bcc4';ctx.fillText(fuel?`DIESEL ${fuel.remaining<10?fuel.remaining.toFixed(1):Math.floor(fuel.remaining)} L`:'DIESEL  ▰▰▰▰▱',512,377);if(fuel){ctx.fillStyle='#283b42';ctx.fillRect(390,387,244,7);ctx.fillStyle=fuel.percent<.15?'#ff754f':'#dcff00';ctx.fillRect(390,387,244*fuel.percent,7);}ctx.fillStyle='#a6bcc4';ctx.fillText(`${Math.floor(elapsed/60)}:${Math.floor(elapsed%60).toString().padStart(2,'0')}`,840,377);this.instruments.update(false);
     const nav=this.navigation.getContext() as CanvasRenderingContext2D;nav.fillStyle='#10191e';nav.fillRect(0,0,1024,640);nav.fillStyle='#d7e1e5';nav.textAlign='left';nav.font='34px Arial';nav.fillText(`${this.origin} → ${this.destination}`,55,70);nav.fillStyle='#6e8791';nav.font='21px Arial';nav.fillText('NORDIC HAUL / TRANSPORT',55,109);
-    nav.strokeStyle='#26363b';nav.lineWidth=28;nav.beginPath();nav.moveTo(120,480);nav.bezierCurveTo(600,430,350,200,830,220);nav.stroke();nav.strokeStyle='#a5c9d2';nav.lineWidth=9;nav.stroke();nav.fillStyle='#cbb77b';nav.beginPath();nav.arc(120+progress*710,480-progress*260,14,0,Math.PI*2);nav.fill();nav.fillStyle='#d8e4e6';nav.font='bold 45px Arial';nav.fillText(`${Math.round(progress*100)} %`,675,515);nav.strokeStyle='#3b4c52';nav.lineWidth=1;nav.beginPath();nav.moveTo(40,564);nav.lineTo(984,564);nav.stroke();nav.font='22px Arial';nav.fillStyle='#7f959e';for(let i=0;i<4;i++)nav.fillText(['NAV','MEDIA','TRUCK','SETTINGS'][i],60+i*240,608);this.navigation.update(false);
+    if(fuel){
+      nav.fillStyle='#7e929e';nav.font='30px Arial';nav.fillText('DIESEL TILBAGE',60,190);nav.fillText('FORBRUG NU',550,190);
+      nav.fillStyle=fuel.percent<.15?'#ff805c':'#dcff00';nav.font='bold 100px Arial';nav.fillText(fuel.remaining<10?fuel.remaining.toFixed(1):Math.floor(fuel.remaining).toString(),60,310);
+      nav.fillStyle='#edf5f5';nav.fillText(fuel.instant===null?fuel.hourly.toFixed(0):fuel.instant.toFixed(1),550,310);
+      nav.fillStyle='#92a7b1';nav.font='30px Arial';nav.fillText('LITER',60,356);nav.fillText(fuel.instant===null?'L/T TOMGANG':'L/100 KM',550,356);
+      nav.fillStyle='#273d47';nav.fillRect(60,395,885,22);nav.fillStyle=fuel.percent<.15?'#ff805c':'#dcff00';nav.fillRect(60,395,885*fuel.percent,22);
+      nav.fillStyle='#d9e7ec';nav.font='bold 35px Arial';nav.fillText('ØKOBONUS  + '+economyBonus(fuel.remaining).toLocaleString('da-DK')+' KR.',60,483);
+    }else{nav.strokeStyle='#26363b';nav.lineWidth=28;nav.beginPath();nav.moveTo(120,480);nav.bezierCurveTo(600,430,350,200,830,220);nav.stroke();nav.strokeStyle='#a5c9d2';nav.lineWidth=9;nav.stroke();nav.fillStyle='#cbb77b';nav.beginPath();nav.arc(120+progress*710,480-progress*260,14,0,Math.PI*2);nav.fill();}nav.fillStyle='#d8e4e6';nav.font='bold 45px Arial';nav.fillText(`${Math.round(progress*100)} %`,675,515);nav.strokeStyle='#3b4c52';nav.lineWidth=1;nav.beginPath();nav.moveTo(40,564);nav.lineTo(984,564);nav.stroke();nav.font='22px Arial';nav.fillStyle='#7f959e';for(let i=0;i<4;i++)nav.fillText(['NAV','MEDIA','TRUCK','SETTINGS'][i],60+i*240,608);this.navigation.update(false);
   }
   configure(c:TruckConfig){
     if(this.paint){this.paint.albedoColor=Color3.FromHexString(FINISHES.find(x=>x.id===c.color)!.hex).toLinearSpace();this.paint.environmentIntensity=.8;this.paint.metallic=.55;this.paint.roughness=.26;}
@@ -337,7 +345,7 @@ export class TruckScene {
     this.cockpit.fov=(isMobileLayout()&&innerHeight>innerWidth?1.6:1.12)+(reducedMotion?0:Math.min(s.speed/33.3,1)*.14);
     for(const m of this.truck.getChildMeshes())if(m.name.startsWith('steering_assembly'))m.rotationQuaternion=Quaternion.RotationAxis(new Vector3(0,-.60,.80),-s.steering*.75);
     for(const mirror of this.mirrors){const side=mirror.side;mirror.camera.position.set(s.x+side*1.44*cos+2.5*sin,s.y+3.3,s.z-side*1.44*sin+2.5*cos);mirror.camera.rotation.set(.08-s.pitch,s.yaw+Math.PI-side*.14,0);}
-    this.displayTick+=1;if(this.displayTick%6===0)this.drawDisplays(s.speed,s.elapsed,s.progress);
+    this.displayTick+=1;if(this.displayTick%6===0)this.drawDisplays(s.speed,s.elapsed,s.progress,s.fuel);
   }
   start(callback:(dt:number)=>void){this.engine.runRenderLoop(()=>{const dt=Math.min(this.engine.getDeltaTime()/1000,.1);this.elapsed+=dt;callback(dt);this.scene.render();this.canvas.dataset.sparks=this.scene.particleSystems.reduce((n,p)=>n+p.getActiveCount(),0).toString();this.canvas.dataset.fps=Math.round(this.engine.getFps()).toString();if(this.elapsed>5&&!document.hidden)this.slowFrames=dt>.04?this.slowFrames+1:Math.max(0,this.slowFrames-2);if(this.slowFrames>180&&this.quality==='balanced'){this.quality='performance';this.engine.setHardwareScalingLevel(isMobileLayout()?1.2:Math.max(1.2,window.devicePixelRatio/1.2));this.shadow.getShadowMap()!.resize(512);}});}
   private inspectionFov(){return Math.max(1.02,Math.min(1.5,2*Math.atan(Math.tan(.80)/(innerWidth/innerHeight))));}

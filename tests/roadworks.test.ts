@@ -78,5 +78,5 @@ test('a driver can complete the unchanged full route through three varied worksi
     let error=desired-snap.yaw;while(error>Math.PI)error-=2*Math.PI;while(error<-Math.PI)error+=2*Math.PI;
     sim.step({throttle:snap.speed<22,brake:snap.speed>23,left:error<-.035,right:error>.035});
   }
-  assert.ok(sim.done,`Race stalled: ${sim.snapshot().progress}`);assert.equal(sim.target,target);assert.equal(seen.size,3);assert.equal(sim.tender.par,TENDERS[0].par);sim.dispose();
+  assert.equal(sim.snapshot().fuel.empty,false);assert.equal(sim.snapshot().progress,1);assert.ok(sim.done,`Race stalled: ${sim.snapshot().progress}`);assert.equal(sim.target,target);assert.equal(seen.size,3);assert.equal(sim.tender.par,TENDERS[0].par);sim.dispose();
 });

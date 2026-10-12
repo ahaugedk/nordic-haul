@@ -33,11 +33,11 @@ test('actual loaded Rapier trucks climb the road and more power compensates for 
   const light=run(8),heavy=run(24),strong=run(24,'D17A780');
   assert.ok(light.progress>heavy.progress+.025);assert.ok(strong.progress>heavy.progress+.015);
 });
-test('highway is closed with long climbs, over seventy metres of elevation and eleven-percent grades',()=>{
+test('highway is closed with long climbs, over ninety metres of elevation and steeper climb grades',()=>{
   const start=atDistance(0),end=atDistance(TRACK_LENGTH);assert.ok(Math.hypot(start.x-end.x,start.z-end.z)<.001);
   assert.equal(atDistance(600).x,TRACK_RX);assert.equal(atDistance(30).yaw,atDistance(600).yaw);
-  const heights=TRACK.map(p=>p.y);assert.ok(Math.max(...heights)-Math.min(...heights)>70);
-  assert.ok(Math.max(...TRACK.map(p=>p.grade))>.11);assert.ok(Math.max(...TRACK.map(p=>Math.abs(p.grade)))<.12);
+  const heights=TRACK.map(p=>p.y);assert.ok(Math.max(...heights)-Math.min(...heights)>90);
+  assert.ok(Math.max(...TRACK.map(p=>p.grade))>.11);assert.ok(Math.max(...TRACK.map(p=>Math.abs(p.grade)))<.13);
   for(const s of [10,700,1150,1850]){const p=atDistance(s,3.5),n=nearestTrack(p.x,p.z);assert.ok(Math.abs(n.lane-3.5)<.03);assert.ok(Math.abs(n.s-s)<.1);}
 });
 test('guardrails keep a sideways-moving truck inside the road',()=>{

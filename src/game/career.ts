@@ -1,5 +1,6 @@
 import { DEFAULT_CONFIG, START_FUNDS, priceFor, validConfig, type TruckConfig } from '../data/catalog';
 import { CITIES } from '../data/europe';
+import { economyBonus } from './fuel';
 export type Career={version:2;ownsTruck:boolean;funds:number;truck:TruckConfig;races:number;wins:number;earned:number;currentCity:string};
 const key='nordic-haul-career-v1';
 export function freshCareer():Career {return {version:2,ownsTruck:false,funds:START_FUNDS,truck:{...DEFAULT_CONFIG},races:0,wins:0,earned:0,currentCity:'aarhus'};}
@@ -34,8 +35,9 @@ export function buyConfiguration(c:Career,draft:TruckConfig):Career|null {
   const cost=upgradeCost(c,draft); if(cost>c.funds)return null;
   return {...c,ownsTruck:true,funds:c.funds-cost,truck:{...draft}};
 }
-export function settleRace(c:Career,base:number,place:number,withinTime:boolean,destination?:string):{career:Career;payout:number;bonus:number} {
+export function settleRace(c:Career,base:number,place:number,withinTime:boolean,destination?:string,fuelRemaining=0):{career:Career;payout:number;bonus:number;ecoBonus:number} {
   const bonus=withinTime?Math.round(base*.15):0;
-  const payout=Math.round(base*([1,.8,.65,.55,.45,.35,.25][place-1]??.25))+bonus;
-  return {career:{...c,funds:c.funds+payout,races:c.races+1,wins:c.wins+(place===1?1:0),earned:c.earned+payout,currentCity:CITIES.some(x=>x.id===destination)?destination!:c.currentCity},payout,bonus};
+  const ecoBonus=economyBonus(fuelRemaining),payout=Math.round(base*([1,.8,.65,.55,.45,.35,.25][place-1]??.25))+bonus+ecoBonus;
+  return {career:{...c,funds:c.funds+payout,races:c.races+1,wins:c.wins+(place===1?1:0),earned:c.earned+payout,currentCity:CITIES.some(x=>x.id===destination)?destination!:c.currentCity},payout,bonus,ecoBonus};
 }
+export function failRace(c:Career):Career{return {...c,races:c.races+1};}
