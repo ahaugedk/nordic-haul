@@ -22,7 +22,7 @@ import { prepareSignPreview } from './game/signPreview';
 import { TrafficVoice } from './game/trafficVoice';
 import { economyBonus,rangeKilometres,type FuelSnapshot } from './game/fuel';
 import { prepareRoadworkPreview } from './game/roadworkPreview';
-import { prepareFuelPreview } from './game/fuelPreview';
+import { prepareFuelPreview,driveFuelRollPreview } from './game/fuelPreview';
 
 const app=document.querySelector<HTMLDivElement>('#app')!;
 const canvas=document.querySelector<HTMLCanvasElement>('#scene')!;
@@ -238,7 +238,7 @@ try{
     if(mode==='race'&&sim){
       accumulator+=dt;while(accumulator>=1/60){
         if(import.meta.env.DEV&&lanePreview)driveLanePreview(sim);
-        sim.step(import.meta.env.DEV&&lanePreview?{...input,throttle:true}:input);accumulator-=1/60;
+        sim.step(import.meta.env.DEV&&fuelPreview==='roll'?driveFuelRollPreview(sim):import.meta.env.DEV&&lanePreview?{...input,throttle:true}:input);accumulator-=1/60;
       }
       const s=sim.snapshot();view.updateRace(s);audio.update(s.speed,input.throttle,soundEnabled&&!sim.paused&&s.countdown<=0);
       if(import.meta.env.DEV&&impactPreview&&Number(canvas.dataset.sparks)>0&&++impactPreviewFrames>10&&s.impacts.length){sim.paused=true;raceMusic.pause();}

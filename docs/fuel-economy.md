@@ -21,8 +21,8 @@ Deterministiske prøveløb i den rigtige Rapier-simulation med 600 hk, standardk
 
 | Kørestil | Last | Gennemsnit | Diesel ved levering | Tid |
 |---|---:|---:|---:|---:|
-| Moderat fart, slip gas nedad | 8 t | 22,6 L/100 km | 63,1 L | 2:22 |
-| Moderat fart, slip gas nedad | 24 t | 34,5 L/100 km | 37,7 L | 2:55 |
+| Moderat fart, slip gas nedad | 8 t | 26,3 L/100 km | 50,4 L | 2:39 |
+| Moderat fart, slip gas nedad | 24 t | 38,1 L/100 km | 25,4 L | 3:07 |
 
 Konstant fuld gas på racerbanens stejle bakker giver betydeligt højere forbrug og kan tømme turens diesel før mål. Tallet varierer med startplads, hændelser, fart, truck og manøvrer. Disse prøvetal afgrænser kalibreringen; alle virkelige ruter har ikke dette forbrug.
 
@@ -45,3 +45,23 @@ Rækkevidde = liter tilbage × 100 / forventet L/100 km. Det forventede forbrug 
 Grøn betyder, at den beregnede rækkevidde har en buffer til mål. Gul betyder, at bufferen er mindre end 5 km eller 5 % af afstanden til mål (det største af de to). Rød betyder kortere rækkevidde end afstand til mål og viser “KØR MERE ØKONOMISK” med råd om at sænke farten og slippe gas nedad. Første røde advarsel giver én lyd pr. løb gennem den eksisterende masterlydknap. Den kombineres med en samtidig reserveadvarsel, så lydene ikke stables. Pause, nedtælling og afsluttede løb udsender ingen nye brændstofsignaler.
 
 Rækkevidde rundes ned, afstand til mål op; under 10 km vises en decimal. De grønne/gule/røde statusbeskeder opdateres kun ved statusskift i live-regionen, mens km-tal løbende opdateres uden at blive læst op hele tiden. Mobilpanelet holder afstandstallene samlet ved fartmåleren. Lokale `?fuelPreview=range-short` og `range-tight` scener kontrollerer begge advarsler med den rigtige beregning og cockpittekstur, og fjernes fra produktionsbygget.
+
+
+## Kalibrering af rullekørsel
+
+Den oprindelige model havde omtrent normal bevægelsestid, mens vejkilometerne blev komprimeret til et kort løb. På plan vej mistede standardtrucken med 24 t last kun 4,7 km/t på ti sekunder fra 90 km/t, men afstanden blev samtidig talt som cirka 28 rutekilometer. Det gjorde nul-forbrugsperioder for fordelagtige i racet.
+
+Grundmodellens rullemodstand (0,007), kvadratiske luftmodstand og tyngdekraft er bevaret. Ved sluppet gas lægges nu en særskilt spildæmpning til, så den samlede passive modstand er fire gange grundmodstanden. Det er kalibrering til komprimeret racingtid, ikke en ny fabrikskoefficient for dæk eller et målt Volvo-motorbremsekort. Den samme funktion gælder spiller og rivaler. Med gas påvirker denne ekstra dæmpning ikke motorkraften. Bakker kan stadig give fart via tyngdekraften.
+
+Plan vej, 90 km/t ved start, ingen gas eller bremse, efter ti sekunder:
+
+| Last | Før | Efter |
+|---|---:|---:|
+| 8 t | 83,8 km/t | 68,0 km/t |
+| 24 t | 85,3 km/t | 72,5 km/t |
+
+Det betyder, at jævn fart på plan vej kræver tilbagevendende gas, mens tungere last stadig holder mere momentum. Nul L/100 km ved rullekørsel med motorens brændstofafbrydelse er bevaret; det koster nu mere fart. På tilstrækkeligt stejle nedkørsler kan man fortsat bevare eller øge farten uden gas. [Volvos beskrivelse af luft- og rullemodstand](https://www.volvotrucks.com/en-en/news-stories/insights/articles/2019/feb/how-to-specify-your-truck-for-fuel-efficiency.html) beskriver de relevante modstande, men publicerer ikke denne spilkalibrering.
+
+Prøvechaufføren giver nu også gas, hvis farten kommer under cirka 58 km/t på en svag nedkørsel, i stedet for at forbyde gas på alle negative stigninger. De økonomiske prøver i tabellen ovenfor er opdateret til denne styrepolitik og dæmpning. Standardmotoren med tung last leverer stadig, men denne økonomiske prøve når ikke tidsbonus inden 3:00. Det er et valg mellem fart og økobonus, ikke en ændring af tidsgrænsen eller rutelængden.
+
+To nye regressionsprøver kontrollerer farttab og masseeffekt på plan vej samt virkelige, kollisionsfrie Rapier-trucks på motorvejens næsten flade bakketop. Alle løbs- og vejarbejdsgennemførelser testes stadig. Lokal `?fuelPreview=roll` starter ved 90 km/t uden gas, holder trucken i banen med styringen og fryser efter ti sekunder; den bruger den faktiske simulation og fjernes fra produktion.

@@ -82,3 +82,24 @@ test('the rendered countryside remains below both carriageways despite the large
   };
   for(let i=0;i<300;i++)for(const lane of [-8,0,8,15,23,31]){const p=atDistance(i/300*TRACK_LENGTH,lane);assert.ok(meshHeight(p.x,p.z)<p.y+.03,`Terrain intersects the road at ${i}, lane ${lane}`);}
 });
+
+
+test('coasting loses meaningful speed on a level road while momentum still favours the heavier truck',()=>{
+ const coast=(tonnes:number)=>{let v=25;for(let i=0;i<600;i++)v=Math.max(0,v+accelerationFor(DEFAULT_CONFIG,tonnes,v,0,false,false)/60);return v*3.6;};
+ const light=coast(8),heavy=coast(24);
+ assert.ok(light>60&&light<72);assert.ok(heavy>65&&heavy<75);assert.ok(heavy>light);
+ for(const tonnes of [8,24]){assert.ok(accelerationFor(DEFAULT_CONFIG,tonnes,80/3.6,0,false,false)<0);assert.ok(accelerationFor(DEFAULT_CONFIG,tonnes,80/3.6,0,true,false)>0);}
+});
+test('real loaded Rapier trucks lose speed while coasting across the nearly level motorway crest',()=>{
+ for(const tonnes of [8,24]){
+  const sim=new Simulation(DEFAULT_CONFIG,{...TENDERS[0],tonnes},()=>0,{roadworks:false}),p=atDistance(970,0);
+  sim.body.setTranslation({x:p.x,y:p.y+1.9,z:p.z},true);sim.yaw=p.yaw;sim.speed=25;sim.progress.distance=890;sim.progress.last=970;sim.progress.nextGate=TRACK_LENGTH/2;sim.countdown=0;
+  const fuel=sim.fuel.remaining;
+  for(let i=0;i<600;i++){
+   const s=sim.snapshot(),aim=atDistance(nearestTrack(s.x,s.z).s+Math.max(9,s.speed*.65),0);
+   let e=Math.atan2(aim.x-s.x,aim.z-s.z)-s.yaw;while(e>Math.PI)e-=2*Math.PI;while(e<-Math.PI)e+=2*Math.PI;
+   sim.step({throttle:false,brake:false,left:e<-.035,right:e>.035});
+  }
+  const s=sim.snapshot();assert.ok(s.speed*3.6<78);assert.ok(s.speed*3.6>65);assert.equal(s.offRoad,false);assert.equal(s.fuel.remaining,fuel);assert.equal(s.fuel.mode,'coast');assert.equal(s.impacts.length,0);sim.dispose();
+ }
+});
